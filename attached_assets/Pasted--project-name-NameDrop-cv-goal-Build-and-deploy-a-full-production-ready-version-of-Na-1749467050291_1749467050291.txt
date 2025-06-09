@@ -1,0 +1,107 @@
+{
+  "project_name": "NameDrop.cv",
+  "goal": "Build and deploy a full production-ready version of NameDrop.cv using the coral/orange color scheme, hosted on Replit. The platform allows users to create a personal CV web page at a subdomain like username.namedrop.cv. The product must be mobile-first, fast, secure, and support Free and Pro plans with Stripe billing. SEO and spam protection must be built-in. This is a launch-ready product, not an MVP.",
+
+  "theme": {
+    "primary": "#FF6B4A",
+    "accent": "#FF8C66",
+    "background": "#FFF9F7",
+    "text": "#2E2E2E",
+    "font": "Inter, sans-serif",
+    "style": "Clean, warm, modern, mobile-friendly"
+  },
+
+  "authentication": {
+    "method": "Replit OAuth",
+    "goal": "Allow secure user login using Replit accounts. Must share auth token format with ResumeFormatter.io for future sync.",
+    "roles": ["FreeUser", "ProUser", "Admin"]
+  },
+
+  "core_features": [
+    "Live CV editor with preview pane",
+    "Resume import (from ResumeFormatter.io or upload and parse)",
+    "Profile builder sections: Name, Tagline, Bio, Skills, Work History, Projects, Social Links, Resume Upload",
+    "Theme selector (3 versions of coral-colored templates)",
+    "Subdomain profile publishing: e.g., leewhite.namedrop.cv",
+    "SEO meta + Open Graph preview builder for profiles",
+    "Mobile-first responsive layout for all pages",
+    "Dark mode toggle"
+  ],
+
+  "pro_features": [
+    "Custom domain connection",
+    "Analytics: profile views, resume downloads",
+    "PDF export of public profile",
+    "Verified Badge (placeholder with future VerifyMy.cv integration)",
+    "Stripe-powered Pro upgrade (monthly: $7 / annual: $49)"
+  ],
+
+  "admin_dashboard": {
+    "features": [
+      "User table with status (Free/Pro)",
+      "Spam control tools: ban, de-index, unpublish",
+      "Error log monitoring + moderation reports",
+      "Analytics overview"
+    ]
+  },
+
+  "pages_and_routes": [
+    "/ → Landing page (hero, feature grid, CTA)",
+    "/auth → Replit OAuth login",
+    "/onboarding → Resume import + profile setup wizard",
+    "/dashboard → Profile manager and analytics",
+    "/editor → Section builder + theme selector",
+    "/preview/:username → Public CV page (mobile and desktop)",
+    "/settings → Upgrade, domain, verification, account",
+    "/pro → Pricing and benefits",
+    "/terms, /privacy, /cookie-policy → Legal pages"
+  ],
+
+  "backend": {
+    "language": "TypeScript with Node.js",
+    "framework": "React 18 (Frontend), Express (API routes)",
+    "database": "PostgreSQL 15 via Neon",
+    "file_storage": "Replit’s file system or S3-compatible storage for resumes and avatars",
+    "logging": "Enable Replit Logs + console logging",
+    "rate_limit": "Protect /preview and /signup endpoints from abuse"
+  },
+
+  "seo_and_security": {
+    "seo_requirements": [
+      "Custom Open Graph tags per public profile",
+      "Dynamic meta title and description",
+      "Only index complete profiles (noindex until minimum content met)",
+      "Canonical tag support"
+    ],
+    "security": [
+      "XSS/CSRF protection",
+      "Rate limiting + moderation triggers",
+      "Sanitize user inputs"
+    ]
+  },
+
+  "payment": {
+    "gateway": "Stripe",
+    "plans": [
+      { "name": "Free", "features": ["1 CV", "namedrop.cv subdomain", "basic themes"] },
+      { "name": "Pro", "price_monthly": 7, "price_annual": 49, "features": ["Analytics", "Custom Domain", "PDF Export", "Priority Publishing"] }
+    ]
+  },
+
+  "deployment": {
+    "platform": "Replit (replit.app domain first, then connected to namedrop.cv)",
+    "requirements": [
+      "SSL enabled",
+      "Custom domain routing (username.namedrop.cv)",
+      "Fast loading for mobile"
+    ]
+  },
+
+  "final_checks_before_launch": [
+    "No placeholder content in UI or code",
+    "Mobile usability score above 95% in Lighthouse",
+    "Test account creation, profile publishing, Stripe checkout, and resume upload end-to-end",
+    "Legal and privacy links included and linked from footer",
+    "Profile spam filter active with profanity/URL blacklist"
+  ]
+}

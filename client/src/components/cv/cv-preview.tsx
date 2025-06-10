@@ -12,15 +12,63 @@ import {
   Twitter,
   ExternalLink,
   Calendar,
-  Building
+  Building,
+  Download,
+  BarChart3
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { ExternalLink as ExternalLinkType } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 interface CVPreviewProps {
   profile: any;
 }
 
 export function CVPreview({ profile }: CVPreviewProps) {
+  const handleLinkClick = async (link: ExternalLinkType) => {
+    if (profile.id) {
+      try {
+        await apiRequest("POST", `/api/click/${profile.id}/${link.id}`, {
+          url: link.url
+        });
+      } catch (error) {
+        console.error("Failed to track link click:", error);
+      }
+    }
+    window.open(link.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDownloadResume = async () => {
+    if (profile.id) {
+      try {
+        await apiRequest("POST", `/api/profiles/${profile.id}/download`);
+      } catch (error) {
+        console.error("Failed to track download:", error);
+      }
+    }
+  };
+
+  const getIconForLink = (iconType: string) => {
+    const iconMap: { [key: string]: string } = {
+      link: "🔗",
+      website: "🌐",
+      email: "📧",
+      phone: "📱",
+      instagram: "📸",
+      twitter: "🐦",
+      linkedin: "💼",
+      youtube: "📺",
+      tiktok: "🎵",
+      shop: "🛒",
+      music: "🎵",
+      calendar: "📅",
+      download: "⬇️",
+      portfolio: "🎨",
+      blog: "📝",
+    };
+    return iconMap[iconType] || "🔗";
+  };
+
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-96 text-muted-foreground">
@@ -191,6 +239,50 @@ export function CVPreview({ profile }: CVPreviewProps) {
             </section>
           )}
 
+          {/* External Links Section (Link-in-Bio) */}
+          {profile.externalLinks && profile.externalLinks.filter((link: ExternalLinkType) => link.isActive && link.label && link.url).length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4 text-primary">Quick Links</h2>
+              <div className="space-y-3">
+                {profile.externalLinks
+                  .filter((link: ExternalLinkType) => link.isActive && link.label && link.url)
+                  .map((link: ExternalLinkType) => (
+                    <Button
+                      key={link.id}
+                      onClick={() => handleLinkClick(link)}
+                      className="w-full h-auto p-4 justify-start"
+                      variant="outline"
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <span className="text-lg">{getIconForLink(link.icon || 'link')}</span>
+                        <div className="flex-1 text-left">
+                          <div className="font-medium">{link.label}</div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {link.url.replace(/^https?:\/\//, '')}
+                          </div>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Button>
+                  ))}
+              </div>
+            </section>
+          )}
+
+          {/* Resume Download */}
+          {profile.resumeUrl && (
+            <section>
+              <Button 
+                onClick={handleDownloadResume}
+                className="w-full"
+                size="lg"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download Resume
+              </Button>
+            </section>
+          )}
+
           {/* Social Links Section */}
           {hasValidSocialLinks(socialLinks) && (
             <section>
@@ -225,6 +317,22 @@ export function CVPreview({ profile }: CVPreviewProps) {
                     <a href={`https://${socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
                       <Twitter className="h-4 w-4 mr-2" />
                       Twitter
+                    </a>
+                  </Button>
+                )}
+                {socialLinks.email && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`mailto:${socialLinks.email}`}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email
+                    </a>
+                  </Button>
+                )}
+                {socialLinks.phone && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`tel:${socialLinks.phone}`}>
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call
                     </a>
                   </Button>
                 )}

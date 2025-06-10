@@ -17,10 +17,15 @@ import {
   Globe,
   Linkedin,
   Github,
-  Twitter
+  Twitter,
+  ExternalLink,
+  QrCode
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { WorkExperience, Project, SocialLinks } from "@shared/schema";
+import { ExternalLinksEditor } from "./external-links-editor";
+import { QRCodeGenerator } from "./qr-code-generator";
 
 interface CVEditorProps {
   profile: any;
@@ -154,9 +159,18 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Basic Information */}
-      <Card>
+    <Tabs defaultValue="basic" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-5">
+        <TabsTrigger value="basic">Basic Info</TabsTrigger>
+        <TabsTrigger value="experience">Experience</TabsTrigger>
+        <TabsTrigger value="projects">Projects</TabsTrigger>
+        <TabsTrigger value="links">Link-in-Bio</TabsTrigger>
+        <TabsTrigger value="sharing">QR & Sharing</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="basic" className="space-y-8">
+        {/* Basic Information */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full"></div>

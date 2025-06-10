@@ -13,12 +13,10 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Check, Crown, CreditCard, Shield, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Initialize Stripe only if public key is available
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 const SubscribeForm = () => {
   const stripe = useStripe();
@@ -94,7 +92,7 @@ export default function Subscribe() {
   }, [isAuthenticated, authLoading, toast]);
 
   useEffect(() => {
-    if (!isAuthenticated || authLoading) return;
+    if (!isAuthenticated || authLoading || !stripePromise) return;
 
     // Create subscription intent as soon as the page loads
     apiRequest("POST", "/api/create-subscription", { billingPeriod })
@@ -116,7 +114,7 @@ export default function Subscribe() {
         }
         toast({
           title: "Setup Error",
-          description: "Failed to initialize payment. Please try again.",
+          description: "Payment processing is temporarily unavailable. Please contact support.",
           variant: "destructive",
         });
       });
@@ -148,6 +146,35 @@ export default function Subscribe() {
               <Button asChild>
                 <Link href="/dashboard">Go to Dashboard</Link>
               </Button>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show payment unavailable message if Stripe isn't configured
+  if (!stripePromise) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <Card className="p-8">
+              <Crown className="h-16 w-16 text-primary mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-4">Payment Processing Temporarily Unavailable</h1>
+              <p className="text-muted-foreground mb-6">
+                We're currently setting up payment processing. Please contact support to upgrade to Pro.
+              </p>
+              <div className="space-y-4">
+                <Button asChild>
+                  <Link href="/pricing">View Pricing Plans</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Or email us at support@namedrop.cv to arrange your Pro upgrade
+                </p>
+              </div>
             </Card>
           </div>
         </div>

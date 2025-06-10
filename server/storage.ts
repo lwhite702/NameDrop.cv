@@ -3,15 +3,19 @@ import {
   profiles,
   profileViews,
   moderationReports,
+  linkClicks,
+  domainVerifications,
   type User,
   type UpsertUser,
   type InsertProfile,
   type Profile,
   type ProfileView,
   type ModerationReport,
+  type LinkClick,
+  type DomainVerification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count } from "drizzle-orm";
+import { eq, desc, and, count, gte } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {

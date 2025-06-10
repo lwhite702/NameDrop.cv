@@ -353,9 +353,11 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
 
-      {/* Work Experience */}
-      <Card>
+      <TabsContent value="experience" className="space-y-8">
+        {/* Work Experience */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full"></div>
@@ -445,9 +447,11 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
           </Button>
         </CardContent>
       </Card>
+      </TabsContent>
 
-      {/* Projects */}
-      <Card>
+      <TabsContent value="projects" className="space-y-8">
+        {/* Projects */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full"></div>
@@ -538,6 +542,19 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
           </Button>
         </CardContent>
       </Card>
+      </TabsContent>
+
+      <TabsContent value="links" className="space-y-8">
+        <ExternalLinksEditor 
+          profile={profile} 
+          onSave={onSave} 
+          onChange={onChange} 
+        />
+      </TabsContent>
+
+      <TabsContent value="sharing" className="space-y-8">
+        <QRCodeGenerator profile={profile} />
+      </TabsContent>
 
       {/* Save Button */}
       <div className="flex justify-end pt-6">
@@ -545,6 +562,6 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
           Save Changes
         </Button>
       </div>
-    </div>
+    </Tabs>
   );
 }

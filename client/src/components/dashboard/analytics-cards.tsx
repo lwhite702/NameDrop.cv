@@ -14,6 +14,7 @@ interface AnalyticsCardsProps {
   analytics: {
     views: number;
     downloads: number;
+    linkClicks: number;
   } | null;
 }
 
@@ -48,6 +49,14 @@ export function AnalyticsCards({ analytics }: AnalyticsCardsProps) {
       description: "PDF downloads by visitors",
       trend: "+8% from last week",
       color: "text-green-600"
+    },
+    {
+      title: "Link Clicks",
+      value: analytics.linkClicks,
+      icon: BarChart3,
+      description: "External link interactions",
+      trend: "+15% from last week",
+      color: "text-indigo-600"
     },
     {
       title: "Engagement Rate",

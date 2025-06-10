@@ -53,15 +53,20 @@ export const profiles = pgTable("profiles", {
   workHistory: jsonb("work_history"),
   projects: jsonb("projects"),
   socialLinks: jsonb("social_links"),
+  externalLinks: jsonb("external_links"), // Link-in-bio tiles
   resumeUrl: text("resume_url"),
   customDomain: text("custom_domain"),
+  customDomainVerified: boolean("custom_domain_verified").default(false),
   theme: varchar("theme").default("classic"),
   isPublished: boolean("is_published").default(false),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   ogImage: text("og_image"),
+  qrCodeUrl: text("qr_code_url"),
   viewCount: integer("view_count").default(0),
   downloadCount: integer("download_count").default(0),
+  linkClickCount: integer("link_click_count").default(0),
+  lastSlugChange: timestamp("last_slug_change"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -84,6 +89,29 @@ export const moderationReports = pgTable("moderation_reports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const linkClicks = pgTable("link_clicks", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  linkId: varchar("link_id"), // External link ID
+  linkUrl: text("link_url"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const domainVerifications = pgTable("domain_verifications", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  domain: varchar("domain").notNull(),
+  verificationStatus: varchar("verification_status").default("pending"), // pending, verified, failed
+  cnameTarget: varchar("cname_target").default("custom.namedrop.cv"),
+  dnsRecords: jsonb("dns_records"),
+  sslStatus: varchar("ssl_status").default("pending"), // pending, issued, failed
+  lastChecked: timestamp("last_checked"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -99,6 +127,8 @@ export type Profile = typeof profiles.$inferSelect;
 
 export type ProfileView = typeof profileViews.$inferSelect;
 export type ModerationReport = typeof moderationReports.$inferSelect;
+export type LinkClick = typeof linkClicks.$inferSelect;
+export type DomainVerification = typeof domainVerifications.$inferSelect;
 
 // Work history and projects interfaces
 export interface WorkExperience {
@@ -125,4 +155,15 @@ export interface SocialLinks {
   twitter?: string;
   website?: string;
   email?: string;
+  phone?: string;
+  location?: string;
+}
+
+export interface ExternalLink {
+  id: string;
+  label: string;
+  url: string;
+  icon?: string;
+  clickCount: number;
+  isActive: boolean;
 }

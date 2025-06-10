@@ -1,0 +1,99 @@
+{
+  "project_name": "NameDrop.cv",
+  "goal": "Build and deploy the full version of NameDrop.cv, a personal CV and link-in-bio site builder. Users can create a mobile-first personal profile at `username.namedrop.cv` or connect their own domain (e.g., yourname.com). The platform must support Pro billing via Stripe, domain routing, analytics, and modern sharing tools. It should look clean, professional, and support strong SEO and brand safety.",
+
+  "core_features": [
+    "Create a personal profile with sections: Bio, Resume, Work Experience, Skills, Projects, Social Links",
+    "Import resume from ResumeFormatter.io or upload manually",
+    "Live preview with template/theme switching (3 coral-themed templates)",
+    "One-click publish to subdomain: `username.namedrop.cv`",
+    "Link-in-bio style tiles: Add external links with custom labels",
+    "Built-in Resume download button + PDF export",
+    "Analytics dashboard for Pro users: views, clicks, downloads",
+    "Dark/light mode toggle",
+    "QR code generator for profile link",
+    "Responsive, mobile-first design"
+  ],
+
+  "domain_and_routing": {
+    "subdomains": {
+      "structure": "username.namedrop.cv",
+      "dns_setup": "Wildcard DNS (`*.namedrop.cv`) must point to main app IP",
+      "routing_logic": "Detect subdomain on request and render matching profile. Fallback to 404 if not found.",
+      "restrictions": ["one change per 30 days", "validate username (no profanity or duplicates)"]
+    },
+    "custom_domains": {
+      "for_pro_users_only": true,
+      "flow": [
+        "User enters domain (e.g. yourname.com)",
+        "Instructions provided: add a CNAME pointing to `custom.namedrop.cv`",
+        "Backend polls for DNS propagation",
+        "When verified, SSL is issued (Let's Encrypt or Replit/Vercel proxy)",
+        "Requests routed to user's published profile"
+      ]
+    }
+  },
+
+  "domain_upsell": {
+    "feature": "Search and sell available domains",
+    "method": "Use domain search API (Namecheap or Google Domains)",
+    "option": "Allow user to buy directly from dashboard or partner site",
+    "revenue": "Offer affiliate link or upsell domain in Pro+ tier"
+  },
+
+  "pro_features": [
+    "Custom domain support",
+    "Profile analytics dashboard",
+    "Download profile as PDF",
+    "Unlimited external link tiles",
+    "Verified badge (future VerifyMy.cv integration)",
+    "QR code export"
+  ],
+
+  "tech_stack": {
+    "frontend": ["React 18", "TypeScript", "Tailwind CSS"],
+    "backend": ["Node.js with Express", "Drizzle ORM", "PostgreSQL 15 (hosted via Neon)"],
+    "auth": "Replit OAuth",
+    "payments": "Stripe integration (monthly + annual Pro tiers)",
+    "storage": "S3-compatible or Replit file system for resumes + avatars",
+    "deployment": "Hosted via Replit or Vercel with support for wildcard + custom domains"
+  },
+
+  "seo_and_security": {
+    "seo": [
+      "Open Graph preview for public profiles",
+      "Dynamic meta title/description per profile",
+      "Index only complete public pages",
+      "Canonical URL support"
+    ],
+    "security": [
+      "Profanity filter for usernames and bios",
+      "XSS protection, input sanitization, domain verification steps",
+      "404 handler for unknown or expired routes"
+    ]
+  },
+
+  "pricing_and_tiers": {
+    "Free": {
+      "features": ["1 profile", "namedrop.cv subdomain", "basic templates"]
+    },
+    "Pro": {
+      "price_monthly": 7,
+      "price_annual": 49,
+      "features": ["Custom domain", "Analytics", "PDF export", "Unlimited themes"]
+    },
+    "ProPlus (optional)": {
+      "price_monthly": 15,
+      "features": ["Premium support", "Domain purchase bundle", "Verified badge"]
+    }
+  },
+
+  "final_launch_checklist": [
+    "Subdomain publishing and routing fully tested",
+    "Custom domain flow works end-to-end (CNAME → verify → SSL → publish)",
+    "Mobile UI responsive and profile sections flexible",
+    "All Stripe flows (upgrade, cancel, webhook) function properly",
+    "SEO tested for indexable and noindex pages",
+    "Profile editor functional with preview, tiles, and download"
+  ]
+}

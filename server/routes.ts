@@ -42,6 +42,81 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Subdomain and custom domain routing middleware
+  app.use(async (req, res, next) => {
+    const host = req.get('host') || '';
+    
+    // Skip for API routes and main domain
+    if (req.path.startsWith('/api/') || host === 'namedrop.cv' || host.startsWith('www.')) {
+      return next();
+    }
+    
+    try {
+      const profile = await storage.getProfileByDomain(host);
+      if (profile) {
+        // Record profile view
+        const ipAddress = req.ip || req.connection.remoteAddress || '';
+        const userAgent = req.get('User-Agent') || '';
+        const referrer = req.get('Referer');
+        
+        await storage.recordProfileView(profile.id, ipAddress, userAgent, referrer);
+        await storage.incrementViewCount(profile.id);
+        
+        // Serve the profile page with SEO meta tags
+        const seoTitle = profile.seoTitle || `${profile.name} - NameDrop.cv`;
+        const seoDescription = profile.seoDescription || profile.bio || `Professional profile for ${profile.name}`;
+        const profileUrl = `https://${host}`;
+        
+        return res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${seoTitle}</title>
+  <meta name="description" content="${seoDescription}">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="${seoTitle}">
+  <meta property="og:description" content="${seoDescription}">
+  <meta property="og:url" content="${profileUrl}">
+  <meta property="og:type" content="profile">
+  ${profile.ogImage ? `<meta property="og:image" content="${profile.ogImage}">` : ''}
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${seoTitle}">
+  <meta name="twitter:description" content="${seoDescription}">
+  
+  <link rel="canonical" href="${profileUrl}">
+  <script>window.__PROFILE_DATA__ = ${JSON.stringify(profile)};</script>
+  <script type="module" crossorigin src="/assets/index.js"></script>
+  <link rel="stylesheet" href="/assets/index.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+        `);
+      }
+    } catch (error) {
+      console.error('Domain routing error:', error);
+    }
+    
+    // 404 for unknown domains/subdomains
+    return res.status(404).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Profile Not Found - NameDrop.cv</title></head>
+<body>
+  <h1>Profile Not Found</h1>
+  <p>The profile you're looking for doesn't exist or has been unpublished.</p>
+  <a href="https://namedrop.cv">Create your own profile at NameDrop.cv</a>
+</body>
+</html>
+    `);
+  });
+
   // Auth middleware
   await setupAuth(app);
 
@@ -161,6 +236,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching public profile:", error);
       res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  // Link click tracking route
+  app.post('/api/click/:profileId/:linkId', async (req, res) => {
+    try {
+      const { profileId, linkId } = req.params;
+      const { url } = req.body;
+      
+      const ipAddress = req.ip || req.connection.remoteAddress || '';
+      const userAgent = req.get('User-Agent') || '';
+      const referrer = req.get('Referer');
+      
+      await storage.recordLinkClick(parseInt(profileId), linkId, url, ipAddress, userAgent, referrer);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error recording link click:", error);
+      res.status(500).json({ message: "Failed to record click" });
+    }
+  });
+
+  // QR Code generation
+  app.post('/api/profiles/me/qr-code', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      const qrCodeUrl = await storage.generateQRCode(profile.id);
+      res.json({ qrCodeUrl });
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      res.status(500).json({ message: "Failed to generate QR code" });
+    }
+  });
+
+  // Slug management
+  app.post('/api/profiles/me/slug', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { slug } = req.body;
+      
+      if (!slug || !/^[a-zA-Z0-9-_]+$/.test(slug)) {
+        return res.status(400).json({ message: "Invalid slug format" });
+      }
+
+      const canChange = await storage.canChangeSlug(userId);
+      if (!canChange) {
+        return res.status(400).json({ message: "You can only change your username once every 30 days" });
+      }
+
+      // Check if slug is already taken
+      const existingProfile = await storage.getProfileBySlug(slug);
+      if (existingProfile) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+
+      const profile = await storage.updateSlug(userId, slug);
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating slug:", error);
+      res.status(500).json({ message: "Failed to update username" });
+    }
+  });
+
+  // Custom domain management
+  app.post('/api/domains/add', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { domain } = req.body;
+      
+      const user = await storage.getUser(userId);
+      if (!user?.isPro) {
+        return res.status(403).json({ message: "Custom domains are a Pro feature" });
+      }
+
+      const profile = await storage.getProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      const verification = await storage.addCustomDomain(profile.id, domain);
+      res.json({
+        verification,
+        instructions: `Add a CNAME record pointing ${domain} to custom.namedrop.cv`
+      });
+    } catch (error) {
+      console.error("Error adding domain:", error);
+      res.status(500).json({ message: "Failed to add domain" });
+    }
+  });
+
+  app.post('/api/domains/verify', isAuthenticated, async (req: any, res) => {
+    try {
+      const { domain } = req.body;
+      const verification = await storage.verifyDomain(domain);
+      res.json(verification);
+    } catch (error) {
+      console.error("Error verifying domain:", error);
+      res.status(500).json({ message: "Failed to verify domain" });
     }
   });
 

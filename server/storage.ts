@@ -15,7 +15,7 @@ import {
   type DomainVerification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gte } from "drizzle-orm";
+import { eq, desc, and, count, gte, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -38,7 +38,18 @@ export interface IStorage {
   
   // Analytics operations
   recordProfileView(profileId: number, ipAddress: string, userAgent: string, referrer?: string): Promise<ProfileView>;
-  getProfileAnalytics(profileId: number): Promise<{ views: number; downloads: number; }>;
+  getProfileAnalytics(profileId: number): Promise<{ views: number; downloads: number; linkClicks: number; }>;
+  recordLinkClick(profileId: number, linkId: string, linkUrl: string, ipAddress: string, userAgent: string, referrer?: string): Promise<LinkClick>;
+  
+  // Domain operations
+  addCustomDomain(profileId: number, domain: string): Promise<DomainVerification>;
+  verifyDomain(domain: string): Promise<DomainVerification>;
+  getProfileByDomain(domain: string): Promise<Profile | undefined>;
+  canChangeSlug(userId: string): Promise<boolean>;
+  updateSlug(userId: string, newSlug: string): Promise<Profile>;
+  
+  // Link management
+  generateQRCode(profileId: number): Promise<string>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -164,7 +175,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(profiles)
       .set({
-        viewCount: profiles.viewCount + 1,
+        viewCount: sql`${profiles.viewCount} + 1`,
       })
       .where(eq(profiles.id, profileId));
   }
@@ -173,7 +184,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(profiles)
       .set({
-        downloadCount: profiles.downloadCount + 1,
+        downloadCount: sql`${profiles.downloadCount} + 1`,
       })
       .where(eq(profiles.id, profileId));
   }
@@ -192,11 +203,12 @@ export class DatabaseStorage implements IStorage {
     return view;
   }
 
-  async getProfileAnalytics(profileId: number): Promise<{ views: number; downloads: number; }> {
+  async getProfileAnalytics(profileId: number): Promise<{ views: number; downloads: number; linkClicks: number; }> {
     const [profile] = await db
       .select({
         views: profiles.viewCount,
         downloads: profiles.downloadCount,
+        linkClicks: profiles.linkClickCount,
       })
       .from(profiles)
       .where(eq(profiles.id, profileId));
@@ -204,7 +216,134 @@ export class DatabaseStorage implements IStorage {
     return {
       views: profile?.views || 0,
       downloads: profile?.downloads || 0,
+      linkClicks: profile?.linkClicks || 0,
     };
+  }
+
+  async recordLinkClick(profileId: number, linkId: string, linkUrl: string, ipAddress: string, userAgent: string, referrer?: string): Promise<LinkClick> {
+    // Record the click event
+    const [click] = await db
+      .insert(linkClicks)
+      .values({
+        profileId,
+        linkId,
+        linkUrl,
+        ipAddress,
+        userAgent,
+        referrer,
+      })
+      .returning();
+
+    // Increment the profile's link click count
+    await db
+      .update(profiles)
+      .set({
+        linkClickCount: sql`${profiles.linkClickCount} + 1`,
+      })
+      .where(eq(profiles.id, profileId));
+
+    return click;
+  }
+
+  // Domain operations
+  async addCustomDomain(profileId: number, domain: string): Promise<DomainVerification> {
+    const [verification] = await db
+      .insert(domainVerifications)
+      .values({
+        profileId,
+        domain,
+        verificationStatus: "pending",
+        cnameTarget: "custom.namedrop.cv",
+      })
+      .returning();
+    return verification;
+  }
+
+  async verifyDomain(domain: string): Promise<DomainVerification> {
+    const [verification] = await db
+      .update(domainVerifications)
+      .set({
+        verificationStatus: "verified",
+        lastChecked: new Date(),
+      })
+      .where(eq(domainVerifications.domain, domain))
+      .returning();
+    return verification;
+  }
+
+  async getProfileByDomain(domain: string): Promise<Profile | undefined> {
+    // Check if it's a subdomain (username.namedrop.cv)
+    if (domain.includes('.namedrop.cv') && !domain.startsWith('www.')) {
+      const subdomain = domain.split('.')[0];
+      const [profile] = await db
+        .select()
+        .from(profiles)
+        .where(and(eq(profiles.slug, subdomain), eq(profiles.isPublished, true)));
+      return profile;
+    }
+
+    // Check custom domains
+    const [verification] = await db
+      .select()
+      .from(domainVerifications)
+      .innerJoin(profiles, eq(domainVerifications.profileId, profiles.id))
+      .where(and(
+        eq(domainVerifications.domain, domain),
+        eq(domainVerifications.verificationStatus, "verified"),
+        eq(profiles.isPublished, true)
+      ));
+    
+    return verification?.profiles;
+  }
+
+  async canChangeSlug(userId: string): Promise<boolean> {
+    const [profile] = await db
+      .select({ lastSlugChange: profiles.lastSlugChange })
+      .from(profiles)
+      .where(eq(profiles.userId, userId));
+
+    if (!profile?.lastSlugChange) return true;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    return profile.lastSlugChange < thirtyDaysAgo;
+  }
+
+  async updateSlug(userId: string, newSlug: string): Promise<Profile> {
+    const [profile] = await db
+      .update(profiles)
+      .set({
+        slug: newSlug,
+        lastSlugChange: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.userId, userId))
+      .returning();
+    return profile;
+  }
+
+  async generateQRCode(profileId: number): Promise<string> {
+    const [profile] = await db
+      .select({ slug: profiles.slug })
+      .from(profiles)
+      .where(eq(profiles.id, profileId));
+
+    if (!profile) throw new Error("Profile not found");
+
+    const profileUrl = `https://${profile.slug}.namedrop.cv`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}`;
+    
+    // Update the profile with QR code URL
+    await db
+      .update(profiles)
+      .set({
+        qrCodeUrl,
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.id, profileId));
+
+    return qrCodeUrl;
   }
 
   // Admin operations

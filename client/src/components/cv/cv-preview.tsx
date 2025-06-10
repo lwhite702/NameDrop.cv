@@ -1,20 +1,20 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getInitials, formatDate } from "@/lib/utils";
 import { 
-  Download, 
-  ExternalLink, 
   Mail, 
   Phone, 
-  MapPin,
+  MapPin, 
+  Globe, 
+  Linkedin, 
+  Github, 
+  Twitter,
+  ExternalLink,
   Calendar,
-  Building,
-  Globe
+  Building
 } from "lucide-react";
-import { FaLinkedin, FaGithub, FaTwitter, FaGlobe } from "react-icons/fa";
+import { formatDate } from "@/lib/utils";
 
 interface CVPreviewProps {
   profile: any;
@@ -23,139 +23,80 @@ interface CVPreviewProps {
 export function CVPreview({ profile }: CVPreviewProps) {
   if (!profile) {
     return (
-      <div className="h-full flex items-center justify-center bg-muted/30 rounded-lg">
-        <p className="text-muted-foreground">No profile data to preview</p>
+      <div className="flex items-center justify-center h-96 text-muted-foreground">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-muted rounded-full mx-auto mb-4"></div>
+          <p>Start editing to see your CV preview</p>
+        </div>
       </div>
     );
   }
 
-  const getSocialIcon = (platform: string) => {
-    switch (platform) {
-      case 'linkedin':
-        return <FaLinkedin className="h-4 w-4" />;
-      case 'github':
-        return <FaGithub className="h-4 w-4" />;
-      case 'twitter':
-        return <FaTwitter className="h-4 w-4" />;
-      case 'website':
-        return <FaGlobe className="h-4 w-4" />;
-      default:
-        return <Globe className="h-4 w-4" />;
-    }
-  };
-
-  const themeClasses = {
-    classic: "bg-white",
-    modern: "",
-    minimal: "bg-white"
-  };
-
+  const socialLinks = profile.socialLinks || {};
+  
   return (
-    <div className={`h-full overflow-y-auto ${themeClasses[profile.theme as keyof typeof themeClasses] || themeClasses.classic}`}>
-      {profile.theme === 'modern' ? (
-        // Modern Theme with Gradient Header
-        <div className="coral-gradient p-6 text-white">
-          <div className="text-center">
-            <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white/30">
-              <AvatarImage src="" alt={profile.name} />
-              <AvatarFallback className="text-lg bg-white/20 text-white">
-                {getInitials(profile.name || "?")}
-              </AvatarFallback>
-            </Avatar>
-            <h1 className="text-2xl font-bold mb-1">{profile.name || "Your Name"}</h1>
-            <p className="text-lg mb-4 opacity-90">{profile.tagline || "Your Professional Title"}</p>
-            
-            {/* Contact Icons */}
-            <div className="flex justify-center space-x-4 mb-4">
-              {profile.socialLinks?.email && (
-                <Mail className="h-4 w-4 opacity-80" />
-              )}
-              {profile.socialLinks?.phone && (
-                <Phone className="h-4 w-4 opacity-80" />
-              )}
-              {profile.socialLinks?.linkedin && (
-                <FaLinkedin className="h-4 w-4 opacity-80" />
-              )}
-              {profile.socialLinks?.github && (
-                <FaGithub className="h-4 w-4 opacity-80" />
-              )}
-              {profile.socialLinks?.website && (
-                <FaGlobe className="h-4 w-4 opacity-80" />
-              )}
+    <div className="max-w-4xl mx-auto">
+      <Card className={`overflow-hidden shadow-lg ${getThemeClass(profile.theme)}`}>
+        {/* Header Section */}
+        <div className="relative bg-gradient-to-r from-primary to-accent text-white p-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Profile Image Placeholder */}
+            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl font-bold text-white">
+                {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
+              </span>
             </div>
             
-            <Button variant="secondary" size="sm" className="bg-white text-primary hover:bg-gray-100">
-              <Download className="h-3 w-3 mr-1" />
-              Resume
-            </Button>
+            {/* Basic Info */}
+            <div className="text-center md:text-left flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                {profile.name || 'Your Name'}
+              </h1>
+              <p className="text-xl text-white/90 mb-4">
+                {profile.tagline || 'Your Professional Tagline'}
+              </p>
+              
+              {/* Contact Info */}
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm">
+                {socialLinks.email && (
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-4 w-4" />
+                    <span>{socialLinks.email}</span>
+                  </div>
+                )}
+                {socialLinks.phone && (
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-4 w-4" />
+                    <span>{socialLinks.phone}</span>
+                  </div>
+                )}
+                {socialLinks.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{socialLinks.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      ) : (
-        // Classic and Minimal Theme Header
-        <div className="text-center p-6 border-b">
-          <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-primary/20">
-            <AvatarImage src="" alt={profile.name} />
-            <AvatarFallback className="text-lg">
-              {getInitials(profile.name || "?")}
-            </AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold mb-1">{profile.name || "Your Name"}</h1>
-          <p className="text-lg text-primary font-semibold mb-4">{profile.tagline || "Your Professional Title"}</p>
-          
-          {/* Contact Icons */}
-          <div className="flex justify-center space-x-4 mb-4">
-            {profile.socialLinks?.email && (
-              <Mail className="h-4 w-4 text-muted-foreground" />
-            )}
-            {profile.socialLinks?.phone && (
-              <Phone className="h-4 w-4 text-muted-foreground" />
-            )}
-            {profile.socialLinks?.linkedin && (
-              <FaLinkedin className="h-4 w-4 text-muted-foreground" />
-            )}
-            {profile.socialLinks?.github && (
-              <FaGithub className="h-4 w-4 text-muted-foreground" />
-            )}
-            {profile.socialLinks?.website && (
-              <FaGlobe className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-          
-          <Button size="sm">
-            <Download className="h-3 w-3 mr-1" />
-            Resume
-          </Button>
-        </div>
-      )}
 
-      {/* Content Container */}
-      <div className={`${profile.theme === 'modern' ? 'bg-white' : ''} p-6`}>
-        <div className="grid gap-6">
-          {/* About Section */}
+        <CardContent className="p-8 space-y-8">
+          {/* Bio Section */}
           {profile.bio && (
             <section>
-              <h2 className="text-lg font-bold mb-3 flex items-center">
-                About
-                {profile.theme === 'minimal' && <div className="w-12 h-0.5 bg-primary ml-3 mt-0.5"></div>}
-              </h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">{profile.bio}</p>
+              <h2 className="text-2xl font-bold mb-4 text-primary">About</h2>
+              <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
             </section>
           )}
 
           {/* Skills Section */}
           {profile.skills && profile.skills.length > 0 && (
             <section>
-              <h2 className="text-lg font-bold mb-3 flex items-center">
-                Skills
-                {profile.theme === 'minimal' && <div className="w-12 h-0.5 bg-primary ml-3 mt-0.5"></div>}
-              </h2>
-              <div className="flex flex-wrap gap-1">
+              <h2 className="text-2xl font-bold mb-4 text-primary">Skills & Expertise</h2>
+              <div className="flex flex-wrap gap-2">
                 {profile.skills.map((skill: string, index: number) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
-                    className="text-xs bg-primary/10 text-primary"
-                  >
+                  <Badge key={index} variant="secondary" className="text-sm">
                     {skill}
                   </Badge>
                 ))}
@@ -163,102 +104,151 @@ export function CVPreview({ profile }: CVPreviewProps) {
             </section>
           )}
 
-          {/* Work Experience */}
+          {/* Work Experience Section */}
           {profile.workHistory && profile.workHistory.length > 0 && (
             <section>
-              <h2 className="text-lg font-bold mb-3 flex items-center">
-                Experience
-                {profile.theme === 'minimal' && <div className="w-12 h-0.5 bg-primary ml-3 mt-0.5"></div>}
-              </h2>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-bold mb-6 text-primary">Work Experience</h2>
+              <div className="space-y-6">
                 {profile.workHistory.map((job: any, index: number) => (
-                  <div key={index} className="border-l-4 border-primary pl-3">
-                    <h3 className="font-semibold text-sm">{job.position || "Position"}</h3>
-                    <div className="flex items-center text-primary font-medium text-xs mb-1">
-                      <Building className="h-3 w-3 mr-1" />
-                      {job.company || "Company"}
-                    </div>
-                    <div className="flex items-center text-xs text-muted-foreground mb-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {job.startDate ? formatDate(job.startDate) : "Start"} - {job.current ? 'Present' : (job.endDate ? formatDate(job.endDate) : "End")}
-                    </div>
-                    {job.description && (
-                      <p className="text-muted-foreground text-xs">{job.description}</p>
-                    )}
-                  </div>
+                  <Card key={index} className="border-l-4 border-l-primary/50">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-3">
+                        <div>
+                          <h3 className="text-xl font-semibold">{job.position || 'Position'}</h3>
+                          <div className="flex items-center gap-2 text-primary font-medium">
+                            <Building className="h-4 w-4" />
+                            {job.company || 'Company'}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm mt-2 md:mt-0">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {job.startDate ? formatDate(job.startDate) : 'Start Date'} - {' '}
+                            {job.current ? 'Present' : (job.endDate ? formatDate(job.endDate) : 'End Date')}
+                          </span>
+                        </div>
+                      </div>
+                      {job.description && (
+                        <p className="text-muted-foreground leading-relaxed">{job.description}</p>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Projects */}
+          {/* Projects Section */}
           {profile.projects && profile.projects.length > 0 && (
             <section>
-              <h2 className="text-lg font-bold mb-3 flex items-center">
-                Projects
-                {profile.theme === 'minimal' && <div className="w-12 h-0.5 bg-primary ml-3 mt-0.5"></div>}
-              </h2>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-bold mb-6 text-primary">Projects & Portfolio</h2>
+              <div className="grid md:grid-cols-2 gap-6">
                 {profile.projects.map((project: any, index: number) => (
-                  <div key={index} className="border-l-4 border-accent pl-3">
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-semibold text-sm">{project.name || "Project Name"}</h3>
-                      {project.url && (
-                        <ExternalLink className="h-3 w-3 text-primary" />
-                      )}
-                    </div>
-                    {project.description && (
-                      <p className="text-muted-foreground text-xs mb-1">{project.description}</p>
-                    )}
-                    {project.technologies && project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {project.technologies.map((tech: string, techIndex: number) => (
-                          <Badge key={techIndex} variant="outline" className="text-xs">
-                            {tech}
-                          </Badge>
-                        ))}
+                  <Card key={index} className="border-l-4 border-l-accent/50">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold">{project.name || 'Project Name'}</h3>
+                        {project.url && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={project.url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      
+                      {project.description && (
+                        <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                          {project.description}
+                        </p>
+                      )}
+                      
+                      {project.technologies && project.technologies.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1">
+                            {project.technologies.map((tech: string, techIndex: number) => (
+                              <Badge key={techIndex} variant="outline" className="text-xs">
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(project.startDate || project.endDate) && (
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {project.startDate ? formatDate(project.startDate) : 'Start'} - {' '}
+                            {project.endDate ? formatDate(project.endDate) : 'Ongoing'}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Contact Information */}
-          <section>
-            <h2 className="text-lg font-bold mb-3 flex items-center">
-              Contact
-              {profile.theme === 'minimal' && <div className="w-12 h-0.5 bg-primary ml-3 mt-0.5"></div>}
-            </h2>
-            <div className="space-y-2">
-              {profile.socialLinks?.email && (
-                <div className="flex items-center text-xs">
-                  <Mail className="h-3 w-3 text-muted-foreground mr-2" />
-                  <span className="text-primary">{profile.socialLinks.email}</span>
-                </div>
-              )}
-              {profile.socialLinks?.phone && (
-                <div className="flex items-center text-xs">
-                  <Phone className="h-3 w-3 text-muted-foreground mr-2" />
-                  <span className="text-primary">{profile.socialLinks.phone}</span>
-                </div>
-              )}
-              {profile.socialLinks?.location && (
-                <div className="flex items-center text-xs">
-                  <MapPin className="h-3 w-3 text-muted-foreground mr-2" />
-                  <span>{profile.socialLinks.location}</span>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="text-center py-4 text-xs text-muted-foreground border-t">
-        <p>Powered by NameDrop.cv</p>
-      </div>
+          {/* Social Links Section */}
+          {hasValidSocialLinks(socialLinks) && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4 text-primary">Connect</h2>
+              <div className="flex flex-wrap gap-4">
+                {socialLinks.website && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={socialLinks.website} target="_blank" rel="noopener noreferrer">
+                      <Globe className="h-4 w-4 mr-2" />
+                      Website
+                    </a>
+                  </Button>
+                )}
+                {socialLinks.linkedin && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`https://${socialLinks.linkedin}`} target="_blank" rel="noopener noreferrer">
+                      <Linkedin className="h-4 w-4 mr-2" />
+                      LinkedIn
+                    </a>
+                  </Button>
+                )}
+                {socialLinks.github && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`https://${socialLinks.github}`} target="_blank" rel="noopener noreferrer">
+                      <Github className="h-4 w-4 mr-2" />
+                      GitHub
+                    </a>
+                  </Button>
+                )}
+                {socialLinks.twitter && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`https://${socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                      <Twitter className="h-4 w-4 mr-2" />
+                      Twitter
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </section>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function getThemeClass(theme: string) {
+  switch (theme) {
+    case 'modern':
+      return 'theme-modern';
+    case 'minimal':
+      return 'theme-minimal';
+    case 'classic':
+    default:
+      return 'theme-classic';
+  }
+}
+
+function hasValidSocialLinks(socialLinks: any) {
+  return socialLinks.website || socialLinks.linkedin || socialLinks.github || socialLinks.twitter;
 }

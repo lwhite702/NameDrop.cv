@@ -8,13 +8,11 @@ import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+// Initialize Stripe only if secret key is available
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 }
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
 
 // Rate limiting
 const authLimiter = rateLimit({
@@ -222,6 +220,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stripe subscription routes
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     try {
+      if (!stripe) {
+        return res.status(503).json({ message: "Payment processing unavailable. Please contact support." });
+      }
+
       const userId = req.user.claims.sub;
       let user = await storage.getUser(userId);
 
@@ -232,18 +234,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user.stripeSubscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
         
-        const invoice = subscription.latest_invoice;
-        let clientSecret = null;
-        
-        if (typeof invoice === 'object' && invoice?.payment_intent) {
-          if (typeof invoice.payment_intent === 'object') {
-            clientSecret = invoice.payment_intent.client_secret;
-          }
-        }
-
         return res.json({
           subscriptionId: subscription.id,
-          clientSecret,
+          status: subscription.status,
         });
       }
 
@@ -270,18 +263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user with Stripe info
       user = await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
 
-      const invoice = subscription.latest_invoice;
-      let clientSecret = null;
-      
-      if (typeof invoice === 'object' && invoice?.payment_intent) {
-        if (typeof invoice.payment_intent === 'object') {
-          clientSecret = invoice.payment_intent.client_secret;
-        }
-      }
-
       res.json({
         subscriptionId: subscription.id,
-        clientSecret,
+        status: subscription.status,
       });
     } catch (error: any) {
       console.error("Error creating subscription:", error);

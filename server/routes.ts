@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertProfileSchema } from "@shared/schema";
 import { resumeFormatterAPI, prepPairAPI } from "./integrations";
+import { aiOptimizationService } from "./openai";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";

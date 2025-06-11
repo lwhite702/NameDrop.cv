@@ -664,7 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/ai/optimize', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
-      if (!user?.isPro) {
+      if (!user.isPro) {
         return res.status(403).json({ error: 'AI optimization is a Pro feature' });
       }
 
@@ -861,6 +861,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Blog categories error:', error);
       res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  // PrepPair Discount Routes
+  app.get('/api/integrations/preppair/discount', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      const discountOffer = await prepPairAPI.generateDiscountCode(user.id);
+      res.json(discountOffer);
+    } catch (error: any) {
+      console.error('PrepPair discount error:', error);
+      res.status(500).json({ error: error.message || 'Failed to generate discount' });
     }
   });
 

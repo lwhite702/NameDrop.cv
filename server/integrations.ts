@@ -147,6 +147,55 @@ export class PrepPairAPI {
       throw error;
     }
   }
+
+  async generateDiscountCode(userId: string) {
+    // Generate exclusive 50% discount for new NameDrop users
+    const discountCode = `NAMEDROP50-${userId.slice(-8).toUpperCase()}`;
+    
+    if (!this.apiKey) {
+      // Return the discount code even without API for frontend display
+      return {
+        code: discountCode,
+        discount: 50,
+        durationMonths: 3,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        claimUrl: `https://preppair.me/signup?code=${discountCode}&partner=namedrop`
+      };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/promotions/generate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code: discountCode,
+          discountPercent: 50,
+          durationMonths: 3,
+          partnerId: 'namedrop',
+          userId: userId,
+          maxUses: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate discount code');
+      }
+
+      return response.json();
+    } catch (error) {
+      // Fallback if API is unavailable
+      return {
+        code: discountCode,
+        discount: 50,
+        durationMonths: 3,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        claimUrl: `https://preppair.me/signup?code=${discountCode}&partner=namedrop`
+      };
+    }
+  }
 }
 
 export const resumeFormatterAPI = new ResumeFormatterAPI();

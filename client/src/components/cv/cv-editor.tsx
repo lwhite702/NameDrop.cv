@@ -554,6 +554,14 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
         />
       </TabsContent>
 
+      <TabsContent value="ai" className="space-y-8">
+        <AIOptimization 
+          profile={profile} 
+          onSave={onSave} 
+          onChange={onChange} 
+        />
+      </TabsContent>
+
       <TabsContent value="sharing" className="space-y-8">
         <QRCodeGenerator profile={profile} />
       </TabsContent>

@@ -42,95 +42,6 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Subdomain and custom domain routing middleware
-  app.use(async (req, res, next) => {
-    const host = req.get('host') || '';
-    
-    // Skip for API routes, assets, and main domain (including localhost for development)
-    if (req.path.startsWith('/api/') || 
-        req.path.startsWith('/assets/') ||
-        host === 'namedrop.cv' || 
-        host.startsWith('www.') ||
-        host.startsWith('localhost') ||
-        host.startsWith('127.0.0.1') ||
-        host.includes('.replit.')) {
-      return next();
-    }
-    
-    // Only check for profile routing on actual subdomains (not main domain)
-    const isSubdomain = host.includes('.') && !host.startsWith('www.') && host !== 'namedrop.cv';
-    
-    if (isSubdomain) {
-      try {
-        const profile = await storage.getProfileByDomain(host);
-        if (profile) {
-          // Record profile view
-          const ipAddress = req.ip || req.connection.remoteAddress || '';
-          const userAgent = req.get('User-Agent') || '';
-          const referrer = req.get('Referer');
-          
-          await storage.recordProfileView(profile.id, ipAddress, userAgent, referrer);
-          await storage.incrementViewCount(profile.id);
-          
-          // Serve the profile page with SEO meta tags
-          const seoTitle = profile.seoTitle || `${profile.name} - NameDrop.cv`;
-          const seoDescription = profile.seoDescription || profile.bio || `Professional profile for ${profile.name}`;
-          const profileUrl = `https://${host}`;
-          
-          return res.send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${seoTitle}</title>
-  <meta name="description" content="${seoDescription}">
-  
-  <!-- Open Graph -->
-  <meta property="og:title" content="${seoTitle}">
-  <meta property="og:description" content="${seoDescription}">
-  <meta property="og:url" content="${profileUrl}">
-  <meta property="og:type" content="profile">
-  ${profile.ogImage ? `<meta property="og:image" content="${profile.ogImage}">` : ''}
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${seoTitle}">
-  <meta name="twitter:description" content="${seoDescription}">
-  
-  <link rel="canonical" href="${profileUrl}">
-  <script>window.__PROFILE_DATA__ = ${JSON.stringify(profile)};</script>
-  <script type="module" crossorigin src="/assets/index.js"></script>
-  <link rel="stylesheet" href="/assets/index.css">
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-          `);
-        } else {
-          // 404 for unknown subdomains only
-          return res.status(404).send(`
-<!DOCTYPE html>
-<html>
-<head><title>Profile Not Found - NameDrop.cv</title></head>
-<body>
-  <h1>Profile Not Found</h1>
-  <p>The profile you're looking for doesn't exist or has been unpublished.</p>
-  <a href="https://namedrop.cv">Create your own profile at NameDrop.cv</a>
-</body>
-</html>
-          `);
-        }
-      } catch (error) {
-        console.error('Domain routing error:', error);
-        return next(); // Continue to main app on error
-      }
-    }
-    
-    // Continue to main app for main domain requests
-    next();
-  });
 
   // Auth middleware
   await setupAuth(app);
@@ -513,6 +424,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating moderation report:", error);
       res.status(500).json({ message: "Failed to create report" });
     }
+  });
+
+  // Subdomain and custom domain routing - only for non-localhost hosts
+  app.use(async (req, res, next) => {
+    const host = req.get('host') || '';
+    
+    // Skip for localhost, API routes, assets, and main domain
+    if (host.startsWith('localhost') ||
+        host.startsWith('127.0.0.1') ||
+        host.includes('.replit.') ||
+        req.path.startsWith('/api/') || 
+        req.path.startsWith('/assets/') ||
+        host === 'namedrop.cv' || 
+        host.startsWith('www.')) {
+      return next();
+    }
+    
+    // Check if this looks like a subdomain (contains dots and is not main domain)
+    const potentialSubdomain = host.split('.')[0];
+    if (host.includes('.') && potentialSubdomain && potentialSubdomain !== 'www') {
+      try {
+        // Try to find profile by subdomain
+        const profile = await storage.getProfileBySlug(potentialSubdomain);
+        if (profile && profile.isPublished) {
+          // Record profile view
+          const ipAddress = req.ip || req.connection.remoteAddress || '';
+          const userAgent = req.get('User-Agent') || '';
+          const referrer = req.get('Referer');
+          
+          await storage.recordProfileView(profile.id, ipAddress, userAgent, referrer);
+          await storage.incrementViewCount(profile.id);
+          
+          // Serve the profile page with SEO meta tags
+          const seoTitle = profile.seoTitle || `${profile.name} - NameDrop.cv`;
+          const seoDescription = profile.seoDescription || profile.bio || `Professional profile for ${profile.name}`;
+          const profileUrl = `https://${host}`;
+          
+          return res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${seoTitle}</title>
+  <meta name="description" content="${seoDescription}">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="${seoTitle}">
+  <meta property="og:description" content="${seoDescription}">
+  <meta property="og:url" content="${profileUrl}">
+  <meta property="og:type" content="profile">
+  ${profile.ogImage ? `<meta property="og:image" content="${profile.ogImage}">` : ''}
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${seoTitle}">
+  <meta name="twitter:description" content="${seoDescription}">
+  
+  <link rel="canonical" href="${profileUrl}">
+  <script>window.__PROFILE_DATA__ = ${JSON.stringify(profile)};</script>
+  <script type="module" crossorigin src="/assets/index.js"></script>
+  <link rel="stylesheet" href="/assets/index.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+          `);
+        }
+        
+        // Also check custom domains
+        const customProfile = await storage.getProfileByDomain(host);
+        if (customProfile && customProfile.isPublished) {
+          const ipAddress = req.ip || req.connection.remoteAddress || '';
+          const userAgent = req.get('User-Agent') || '';
+          const referrer = req.get('Referer');
+          
+          await storage.recordProfileView(customProfile.id, ipAddress, userAgent, referrer);
+          await storage.incrementViewCount(customProfile.id);
+          
+          const seoTitle = customProfile.seoTitle || `${customProfile.name} - NameDrop.cv`;
+          const seoDescription = customProfile.seoDescription || customProfile.bio || `Professional profile for ${customProfile.name}`;
+          const profileUrl = `https://${host}`;
+          
+          return res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${seoTitle}</title>
+  <meta name="description" content="${seoDescription}">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="${seoTitle}">
+  <meta property="og:description" content="${seoDescription}">
+  <meta property="og:url" content="${profileUrl}">
+  <meta property="og:type" content="profile">
+  ${customProfile.ogImage ? `<meta property="og:image" content="${customProfile.ogImage}">` : ''}
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${seoTitle}">
+  <meta name="twitter:description" content="${seoDescription}">
+  
+  <link rel="canonical" href="${profileUrl}">
+  <script>window.__PROFILE_DATA__ = ${JSON.stringify(customProfile)};</script>
+  <script type="module" crossorigin src="/assets/index.js"></script>
+  <link rel="stylesheet" href="/assets/index.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+          `);
+        }
+      } catch (error) {
+        console.error('Domain routing error:', error);
+      }
+      
+      // 404 for unknown subdomains
+      return res.status(404).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Profile Not Found - NameDrop.cv</title></head>
+<body>
+  <h1>Profile Not Found</h1>
+  <p>The profile you're looking for doesn't exist or has been unpublished.</p>
+  <a href="https://namedrop.cv">Create your own profile at NameDrop.cv</a>
+</body>
+</html>
+      `);
+    }
+    
+    // Continue to main app for main domain requests
+    next();
   });
 
   const httpServer = createServer(app);

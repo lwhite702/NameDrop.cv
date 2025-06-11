@@ -70,18 +70,29 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 mb-4 md:mb-0">&copy; 2024 NameDrop.cv. All rights reserved.</p>
-          <div className="flex space-x-6">
-            <a href="#" className="text-gray-400 hover:text-coral transition-colors">
-              <FaTwitter className="h-5 w-5" />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-coral transition-colors">
-              <FaLinkedin className="h-5 w-5" />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-coral transition-colors">
-              <FaGithub className="h-5 w-5" />
-            </a>
+        <div className="border-t border-gray-800 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <p className="text-gray-400">&copy; 2024 Wrelik Brands LLC. All rights reserved.</p>
+              <p className="text-sm text-gray-500">NameDrop.cv is a trademark of Wrelik Brands LLC</p>
+            </div>
+            <div className="flex space-x-6">
+              <a href="https://twitter.com/wrelikbrands" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-coral transition-colors">
+                <FaTwitter className="h-5 w-5" />
+              </a>
+              <a href="https://linkedin.com/company/wrelik-brands" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-coral transition-colors">
+                <FaLinkedin className="h-5 w-5" />
+              </a>
+              <a href="https://github.com/wrelik-brands" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-coral transition-colors">
+                <FaGithub className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              Proudly powering professional careers with innovative CV solutions.
+            </p>
           </div>
         </div>
       </div>

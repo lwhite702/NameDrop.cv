@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertProfileSchema } from "@shared/schema";
+import { resumeFormatterAPI, prepPairAPI } from "./integrations";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";
@@ -423,6 +424,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating moderation report:", error);
       res.status(500).json({ message: "Failed to create report" });
+    }
+  });
+
+  // Integration routes
+  app.post('/api/integrations/resumeformatter/import', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { resumeFormatterId } = req.body;
+
+      const importedData = await resumeFormatterAPI.importResume(userId, resumeFormatterId);
+      
+      // Update user's profile with imported data
+      const profile = await storage.getProfile(userId);
+      if (profile) {
+        await storage.updateProfile(userId, {
+          ...importedData,
+          tagline: importedData.bio ? importedData.bio.substring(0, 100) : profile.tagline
+        });
+      }
+
+      res.json({ success: true, data: importedData });
+    } catch (error: any) {
+      console.error("Error importing from ResumeFormatter:", error);
+      res.status(500).json({ message: error.message || "Failed to import resume" });
+    }
+  });
+
+  app.post('/api/integrations/preppair/link', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { preppairToken } = req.body;
+
+      const linkResult = await prepPairAPI.linkAccount(userId, preppairToken);
+      res.json({ success: true, data: linkResult });
+    } catch (error: any) {
+      console.error("Error linking PrepPair account:", error);
+      res.status(500).json({ message: error.message || "Failed to link PrepPair account" });
+    }
+  });
+
+  app.get('/api/integrations/preppair/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { preppairUserId } = req.query;
+
+      if (!preppairUserId) {
+        return res.status(400).json({ message: "PrepPair user ID required" });
+      }
+
+      const progress = await prepPairAPI.getUserProgress(userId, preppairUserId as string);
+      res.json({ success: true, data: progress });
+    } catch (error: any) {
+      console.error("Error fetching PrepPair progress:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch progress" });
+    }
+  });
+
+  // Enhanced SEO meta tags route
+  app.get('/api/seo/meta/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const profile = await storage.getProfileBySlug(slug);
+      
+      if (!profile || !profile.isPublished) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      const meta = {
+        title: profile.seoTitle || `${profile.name} - Professional CV | NameDrop.cv`,
+        description: profile.seoDescription || profile.bio || `Professional CV and portfolio for ${profile.name}. View work experience, skills, and projects.`,
+        keywords: [
+          profile.name,
+          'CV',
+          'resume',
+          'professional',
+          'portfolio',
+          ...(profile.skills || [])
+        ].join(', '),
+        canonical: `https://${slug}.namedrop.cv`,
+        ogImage: profile.ogImage || `https://namedrop.cv/api/og-image/${slug}`,
+        author: profile.name,
+        structuredData: {
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          name: profile.name,
+          jobTitle: profile.tagline,
+          description: profile.bio,
+          url: `https://${slug}.namedrop.cv`,
+          sameAs: Object.values(profile.socialLinks || {}).filter(Boolean)
+        }
+      };
+
+      res.json(meta);
+    } catch (error) {
+      console.error("Error generating SEO meta:", error);
+      res.status(500).json({ message: "Failed to generate SEO meta" });
     }
   });
 

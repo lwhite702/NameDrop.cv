@@ -660,6 +660,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // AI Optimization Routes (Pro users only)
+  app.post('/api/ai/optimize', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.isPro) {
+        return res.status(403).json({ error: 'AI optimization is a Pro feature' });
+      }
+
+      const { profileData } = req.body;
+      if (!profileData) {
+        return res.status(400).json({ error: 'Profile data is required' });
+      }
+
+      const result = await aiOptimizationService.optimizeCV(profileData);
+      res.json(result);
+    } catch (error: any) {
+      console.error('AI optimization error:', error);
+      res.status(500).json({ error: error.message || 'Failed to optimize CV' });
+    }
+  });
+
+  // Blog Routes
+  app.get('/api/blog/posts', async (req, res) => {
+    try {
+      const { search, category } = req.query;
+      
+      // Fetch from Wrelik Brands blog API
+      const wrelikUrl = new URL('https://wrelikbrands.com/api/blog/posts');
+      if (search) wrelikUrl.searchParams.append('search', search as string);
+      if (category) wrelikUrl.searchParams.append('category', category as string);
+      
+      const response = await fetch(wrelikUrl.toString());
+      if (!response.ok) {
+        // Fallback to sample data for development
+        const samplePosts = [
+          {
+            id: '1',
+            title: 'How to Build a Professional CV That Gets Noticed',
+            slug: 'build-professional-cv-gets-noticed',
+            excerpt: 'Learn the essential elements of creating a standout CV that captures recruiters\' attention and lands you interviews.',
+            content: `<h2>The Foundation of a Great CV</h2>
+            <p>Your CV is your first impression with potential employers. In today's competitive job market, you have about 6 seconds to capture a recruiter's attention before they move on to the next candidate.</p>
+            
+            <h3>Essential Sections Every CV Needs</h3>
+            <ul>
+              <li><strong>Professional Summary:</strong> A compelling 2-3 sentence overview of your experience and value proposition</li>
+              <li><strong>Work Experience:</strong> Quantified achievements that demonstrate your impact</li>
+              <li><strong>Skills:</strong> Relevant technical and soft skills aligned with the job requirements</li>
+              <li><strong>Education:</strong> Academic background and relevant certifications</li>
+            </ul>
+            
+            <h3>Writing Impactful Achievement Statements</h3>
+            <p>Instead of listing job duties, focus on specific accomplishments:</p>
+            <blockquote>
+              <p>❌ "Responsible for managing social media accounts"</p>
+              <p>✅ "Increased social media engagement by 150% across 3 platforms, resulting in 2,000+ new followers and 25% boost in website traffic"</p>
+            </blockquote>
+            
+            <h3>Formatting for Success</h3>
+            <p>Clean, professional formatting ensures your content gets read:</p>
+            <ul>
+              <li>Use consistent fonts and formatting throughout</li>
+              <li>Maintain adequate white space for readability</li>
+              <li>Keep to 1-2 pages maximum</li>
+              <li>Use bullet points for easy scanning</li>
+            </ul>`,
+            author: 'Sarah Johnson',
+            publishedAt: '2024-01-15T10:00:00Z',
+            updatedAt: '2024-01-15T10:00:00Z',
+            tags: ['CV', 'Career', 'Job Search', 'Professional Development'],
+            category: 'Career Tips',
+            featured: true,
+            readingTime: 5,
+            featuredImage: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800',
+            seoTitle: 'How to Build a Professional CV That Gets Noticed | NameDrop.cv',
+            seoDescription: 'Expert tips for creating a standout CV that captures recruiters\' attention and lands interviews.'
+          },
+          {
+            id: '2',
+            title: 'The Ultimate Guide to Professional Networking in 2024',
+            slug: 'ultimate-guide-professional-networking-2024',
+            excerpt: 'Master the art of networking with proven strategies for building meaningful professional relationships both online and offline.',
+            content: `<h2>Why Networking Matters More Than Ever</h2>
+            <p>In 2024, professional networking has evolved beyond traditional face-to-face meetings. With remote work becoming the norm, digital networking skills are essential for career growth.</p>
+            
+            <h3>Building Your Online Presence</h3>
+            <p>Your digital presence is often the first impression you make:</p>
+            <ul>
+              <li><strong>LinkedIn Optimization:</strong> Complete profile with professional photo and compelling headline</li>
+              <li><strong>Industry Engagement:</strong> Share insights and comment thoughtfully on posts</li>
+              <li><strong>Content Creation:</strong> Publish articles showcasing your expertise</li>
+            </ul>
+            
+            <h3>Effective Networking Strategies</h3>
+            <ol>
+              <li><strong>Quality over Quantity:</strong> Focus on building genuine relationships rather than collecting contacts</li>
+              <li><strong>Give First:</strong> Offer value before asking for help</li>
+              <li><strong>Follow Up:</strong> Maintain connections with regular, meaningful touchpoints</li>
+              <li><strong>Be Authentic:</strong> Show genuine interest in others' work and challenges</li>
+            </ol>`,
+            author: 'Mike Chen',
+            publishedAt: '2024-01-12T14:30:00Z',
+            updatedAt: '2024-01-12T14:30:00Z',
+            tags: ['Networking', 'Career Growth', 'LinkedIn', 'Professional Development'],
+            category: 'Networking',
+            featured: true,
+            readingTime: 7,
+            featuredImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800',
+            seoTitle: 'Professional Networking Guide 2024 | NameDrop.cv',
+            seoDescription: 'Master digital networking with proven strategies for building meaningful professional relationships.'
+          },
+          {
+            id: '3',
+            title: '50% Off PrepPair.me: Exclusive Offer for NameDrop Users',
+            slug: 'preppair-exclusive-discount-namedrop-users',
+            excerpt: 'Get 3 months of PrepPair.me interview preparation platform at 50% off - exclusively for new NameDrop.cv users.',
+            content: `<h2>Master Your Interview Skills with PrepPair.me</h2>
+            <p>We're excited to announce an exclusive partnership with PrepPair.me, offering our users 50% off their first 3 months of premium interview preparation.</p>
+            
+            <h3>What is PrepPair.me?</h3>
+            <p>PrepPair.me is a comprehensive interview preparation platform that helps job seekers practice and perfect their interview skills through:</p>
+            <ul>
+              <li>AI-powered mock interviews</li>
+              <li>Industry-specific question banks</li>
+              <li>Real-time feedback and scoring</li>
+              <li>Behavioral interview training</li>
+              <li>Technical interview practice</li>
+            </ul>
+            
+            <h3>How to Claim Your Discount</h3>
+            <ol>
+              <li>Create your NameDrop.cv profile</li>
+              <li>Visit the integrations section in your dashboard</li>
+              <li>Click "Connect PrepPair.me"</li>
+              <li>Use code <strong>NAMEDROP50</strong> for 50% off</li>
+            </ol>
+            
+            <p><strong>Limited Time:</strong> This offer is valid for new NameDrop.cv users who sign up within the next 30 days.</p>`,
+            author: 'NameDrop Team',
+            publishedAt: '2024-01-10T09:00:00Z',
+            updatedAt: '2024-01-10T09:00:00Z',
+            tags: ['PrepPair', 'Interview Prep', 'Partnership', 'Discount'],
+            category: 'Announcements',
+            featured: false,
+            readingTime: 3,
+            featuredImage: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800',
+            seoTitle: '50% Off PrepPair.me Interview Prep | NameDrop.cv Partnership',
+            seoDescription: 'Exclusive 50% discount on PrepPair.me interview preparation for new NameDrop.cv users.'
+          }
+        ];
+        
+        return res.json({ posts: samplePosts });
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Blog posts error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog posts' });
+    }
+  });
+
+  app.get('/api/blog/posts/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      
+      // Fetch specific post from Wrelik Brands
+      const response = await fetch(`https://wrelikbrands.com/api/blog/posts/${slug}`);
+      if (!response.ok) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      
+      const post = await response.json();
+      res.json(post);
+    } catch (error) {
+      console.error('Blog post error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+  });
+
+  app.get('/api/blog/categories', async (req, res) => {
+    try {
+      // Fetch categories from Wrelik Brands
+      const response = await fetch('https://wrelikbrands.com/api/blog/categories');
+      if (!response.ok) {
+        // Fallback categories
+        const sampleCategories = [
+          { id: '1', name: 'Career Tips', slug: 'career-tips', description: 'Professional development and career advice', postCount: 15 },
+          { id: '2', name: 'Networking', slug: 'networking', description: 'Building professional relationships', postCount: 8 },
+          { id: '3', name: 'Interview Prep', slug: 'interview-prep', description: 'Interview skills and preparation', postCount: 12 },
+          { id: '4', name: 'Announcements', slug: 'announcements', description: 'Platform updates and partnerships', postCount: 5 }
+        ];
+        
+        return res.json(sampleCategories);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Blog categories error:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

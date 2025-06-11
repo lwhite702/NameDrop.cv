@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { WorkExperience, Project, SocialLinks } from "@shared/schema";
 import { ExternalLinksEditor } from "./external-links-editor";
 import { QRCodeGenerator } from "./qr-code-generator";
+import { AIOptimization } from "@/components/ai/ai-optimization";
 
 interface CVEditorProps {
   profile: any;
@@ -160,10 +161,11 @@ export function CVEditor({ profile, onSave, onChange }: CVEditorProps) {
 
   return (
     <Tabs defaultValue="basic" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="basic">Basic Info</TabsTrigger>
         <TabsTrigger value="experience">Experience</TabsTrigger>
         <TabsTrigger value="projects">Projects</TabsTrigger>
+        <TabsTrigger value="ai">AI Optimize</TabsTrigger>
         <TabsTrigger value="links">Link-in-Bio</TabsTrigger>
         <TabsTrigger value="sharing">QR & Sharing</TabsTrigger>
       </TabsList>

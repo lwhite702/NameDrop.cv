@@ -20,6 +20,7 @@ import Terms from "@/pages/legal/terms";
 import Privacy from "@/pages/legal/privacy";
 import CookiePolicy from "@/pages/legal/cookie-policy";
 import Help from "@/pages/help";
+import Blog from "@/pages/blog";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/preview/:slug" component={Preview} />
+          <Route path="/blog" component={Blog} />
           <Route path="/help" component={Help} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />
@@ -47,6 +49,7 @@ function Router() {
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/preview/:slug" component={Preview} />
           <Route path="/admin" component={Admin} />
+          <Route path="/blog" component={Blog} />
           <Route path="/help" component={Help} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />

@@ -67,6 +67,9 @@ export const profiles = pgTable("profiles", {
   downloadCount: integer("download_count").default(0),
   linkClickCount: integer("link_click_count").default(0),
   lastSlugChange: timestamp("last_slug_change"),
+  aiOptimizationScore: integer("ai_optimization_score"),
+  lastAiOptimization: timestamp("last_ai_optimization"),
+  aiSuggestions: jsonb("ai_suggestions"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

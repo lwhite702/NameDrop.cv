@@ -135,7 +135,7 @@ const themes = [
 export function ThemeSelector({ profile, onSave, onChange }: ThemeSelectorProps) {
   const { user } = useAuth();
   const currentTheme = profile?.theme || 'classic';
-  const isPro = user?.isPro;
+  const isPro = (user as any)?.isPro || false;
 
   const handleThemeSelect = (themeId: string) => {
     const selectedTheme = themes.find(t => t.id === themeId);

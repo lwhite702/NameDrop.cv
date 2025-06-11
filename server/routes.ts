@@ -46,28 +46,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(async (req, res, next) => {
     const host = req.get('host') || '';
     
-    // Skip for API routes and main domain
-    if (req.path.startsWith('/api/') || host === 'namedrop.cv' || host.startsWith('www.')) {
+    // Skip for API routes, assets, and main domain (including localhost for development)
+    if (req.path.startsWith('/api/') || 
+        req.path.startsWith('/assets/') ||
+        host === 'namedrop.cv' || 
+        host.startsWith('www.') ||
+        host.startsWith('localhost') ||
+        host.startsWith('127.0.0.1') ||
+        host.includes('.replit.')) {
       return next();
     }
     
-    try {
-      const profile = await storage.getProfileByDomain(host);
-      if (profile) {
-        // Record profile view
-        const ipAddress = req.ip || req.connection.remoteAddress || '';
-        const userAgent = req.get('User-Agent') || '';
-        const referrer = req.get('Referer');
-        
-        await storage.recordProfileView(profile.id, ipAddress, userAgent, referrer);
-        await storage.incrementViewCount(profile.id);
-        
-        // Serve the profile page with SEO meta tags
-        const seoTitle = profile.seoTitle || `${profile.name} - NameDrop.cv`;
-        const seoDescription = profile.seoDescription || profile.bio || `Professional profile for ${profile.name}`;
-        const profileUrl = `https://${host}`;
-        
-        return res.send(`
+    // Only check for profile routing on actual subdomains (not main domain)
+    const isSubdomain = host.includes('.') && !host.startsWith('www.') && host !== 'namedrop.cv';
+    
+    if (isSubdomain) {
+      try {
+        const profile = await storage.getProfileByDomain(host);
+        if (profile) {
+          // Record profile view
+          const ipAddress = req.ip || req.connection.remoteAddress || '';
+          const userAgent = req.get('User-Agent') || '';
+          const referrer = req.get('Referer');
+          
+          await storage.recordProfileView(profile.id, ipAddress, userAgent, referrer);
+          await storage.incrementViewCount(profile.id);
+          
+          // Serve the profile page with SEO meta tags
+          const seoTitle = profile.seoTitle || `${profile.name} - NameDrop.cv`;
+          const seoDescription = profile.seoDescription || profile.bio || `Professional profile for ${profile.name}`;
+          const profileUrl = `https://${host}`;
+          
+          return res.send(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,14 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div id="root"></div>
 </body>
 </html>
-        `);
-      }
-    } catch (error) {
-      console.error('Domain routing error:', error);
-    }
-    
-    // 404 for unknown domains/subdomains
-    return res.status(404).send(`
+          `);
+        } else {
+          // 404 for unknown subdomains only
+          return res.status(404).send(`
 <!DOCTYPE html>
 <html>
 <head><title>Profile Not Found - NameDrop.cv</title></head>
@@ -114,7 +120,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <a href="https://namedrop.cv">Create your own profile at NameDrop.cv</a>
 </body>
 </html>
-    `);
+          `);
+        }
+      } catch (error) {
+        console.error('Domain routing error:', error);
+        return next(); // Continue to main app on error
+      }
+    }
+    
+    // Continue to main app for main domain requests
+    next();
   });
 
   // Auth middleware

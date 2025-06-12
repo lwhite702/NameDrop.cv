@@ -16,12 +16,13 @@ interface HeroWithMockupProps {
     href: string
     icon?: React.ReactNode
   }
-  mockupImage: {
+  mockupImage?: {
     src: string
     alt: string
     width: number
     height: number
   }
+  children?: React.ReactNode
   className?: string
 }
 
@@ -38,6 +39,7 @@ export function HeroWithMockup({
     icon: <Github className="mr-2 h-4 w-4" />,
   },
   mockupImage,
+  children,
   className,
 }: HeroWithMockupProps) {
   return (
@@ -114,18 +116,21 @@ export function HeroWithMockup({
           {/* Mockup */}
           <div className="relative w-full pt-12 px-4 sm:px-6 lg:px-8">
             <Mockup
+              showBrowser={true}
               className={cn(
                 "animate-appear opacity-0 [animation-delay:700ms]",
                 "shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)]",
                 "border-primary/10 dark:border-primary/5",
               )}
             >
-              <img
-                {...mockupImage}
-                className="w-full h-auto"
-                loading="lazy"
-                decoding="async"
-              />
+              {children || (mockupImage && (
+                <img
+                  {...mockupImage}
+                  className="w-full h-auto"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ))}
             </Mockup>
           </div>
         </div>

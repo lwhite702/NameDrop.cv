@@ -19,8 +19,7 @@ import {
   Search,
   ExternalLink,
   Share,
-  FileText,
-  Github
+  FileText
 } from "lucide-react";
 
 export default function Landing() {
@@ -37,9 +36,8 @@ export default function Landing() {
           href: "/api/login"
         }}
         secondaryCta={{
-          text: "GitHub",
-          href: "https://github.com/namedrop-cv",
-          icon: <Github className="mr-2 h-4 w-4" />
+          text: "View Demo",
+          href: "/preview/demo"
         }}
 
         className="pt-20"

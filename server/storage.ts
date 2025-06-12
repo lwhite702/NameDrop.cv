@@ -509,8 +509,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getKnowledgeBaseArticles(categoryId?: number, published?: boolean): Promise<KnowledgeBaseArticle[]> {
-    let query = db.select().from(knowledgeBaseArticles);
-    
     const conditions = [];
     if (categoryId) {
       conditions.push(eq(knowledgeBaseArticles.categoryId, categoryId));
@@ -520,10 +518,17 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await db
+        .select()
+        .from(knowledgeBaseArticles)
+        .where(and(...conditions))
+        .orderBy(knowledgeBaseArticles.sortOrder, desc(knowledgeBaseArticles.createdAt));
     }
     
-    return await query.orderBy(knowledgeBaseArticles.sortOrder, desc(knowledgeBaseArticles.createdAt));
+    return await db
+      .select()
+      .from(knowledgeBaseArticles)
+      .orderBy(knowledgeBaseArticles.sortOrder, desc(knowledgeBaseArticles.createdAt));
   }
 
   async getKnowledgeBaseArticleBySlug(slug: string): Promise<KnowledgeBaseArticle | undefined> {

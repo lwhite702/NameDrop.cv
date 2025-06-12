@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { isAdmin, logAdminAction } from "./adminAuth";
 import { insertProfileSchema } from "@shared/schema";
 import { resumeFormatterAPI, prepPairAPI } from "./integrations";
 import { aiOptimizationService, cvSuggestionService } from "./openai";
@@ -901,6 +902,230 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('PrepPair discount error:', error);
       res.status(500).json({ error: error.message || 'Failed to generate discount' });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      await logAdminAction(req, 'view', 'users');
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/profiles', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const profiles = await storage.getAllProfiles();
+      await logAdminAction(req, 'view', 'profiles');
+      res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching profiles:", error);
+      res.status(500).json({ message: "Failed to fetch profiles" });
+    }
+  });
+
+  app.post('/api/admin/users/:userId/ban', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.banUser(userId);
+      await logAdminAction(req, 'ban', 'user', userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error banning user:", error);
+      res.status(500).json({ message: "Failed to ban user" });
+    }
+  });
+
+  app.post('/api/admin/users/:userId/unban', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.unbanUser(userId);
+      await logAdminAction(req, 'unban', 'user', userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error unbanning user:", error);
+      res.status(500).json({ message: "Failed to unban user" });
+    }
+  });
+
+  app.get('/api/admin/logs', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getAdminLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching admin logs:", error);
+      res.status(500).json({ message: "Failed to fetch logs" });
+    }
+  });
+
+  // Knowledge Base Admin routes
+  app.get('/api/admin/knowledge-base/categories', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const categories = await storage.getKnowledgeBaseCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post('/api/admin/knowledge-base/categories', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const category = await storage.createKnowledgeBaseCategory(req.body);
+      await logAdminAction(req, 'create', 'knowledge_base_category', category.id.toString(), req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.put('/api/admin/knowledge-base/categories/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const category = await storage.updateKnowledgeBaseCategory(parseInt(id), req.body);
+      await logAdminAction(req, 'update', 'knowledge_base_category', id, req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete('/api/admin/knowledge-base/categories/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteKnowledgeBaseCategory(parseInt(id));
+      await logAdminAction(req, 'delete', 'knowledge_base_category', id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  app.get('/api/admin/knowledge-base/articles', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      const articles = await storage.getKnowledgeBaseArticles(categoryId);
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  app.post('/api/admin/knowledge-base/articles', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const article = await storage.createKnowledgeBaseArticle(req.body);
+      await logAdminAction(req, 'create', 'knowledge_base_article', article.id.toString(), req.body);
+      res.json(article);
+    } catch (error) {
+      console.error("Error creating article:", error);
+      res.status(500).json({ message: "Failed to create article" });
+    }
+  });
+
+  app.put('/api/admin/knowledge-base/articles/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const article = await storage.updateKnowledgeBaseArticle(parseInt(id), req.body);
+      await logAdminAction(req, 'update', 'knowledge_base_article', id, req.body);
+      res.json(article);
+    } catch (error) {
+      console.error("Error updating article:", error);
+      res.status(500).json({ message: "Failed to update article" });
+    }
+  });
+
+  app.delete('/api/admin/knowledge-base/articles/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteKnowledgeBaseArticle(parseInt(id));
+      await logAdminAction(req, 'delete', 'knowledge_base_article', id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      res.status(500).json({ message: "Failed to delete article" });
+    }
+  });
+
+  // Public Knowledge Base routes
+  app.get('/api/knowledge-base/categories', async (req, res) => {
+    try {
+      const categories = await storage.getKnowledgeBaseCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.get('/api/knowledge-base/articles', async (req, res) => {
+    try {
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      const articles = await storage.getKnowledgeBaseArticles(categoryId, true); // Only published
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      res.status(500).json({ message: "Failed to fetch articles" });
+    }
+  });
+
+  app.get('/api/knowledge-base/articles/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const article = await storage.getKnowledgeBaseArticleBySlug(slug);
+      if (!article || !article.isPublished) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+      
+      // Increment view count
+      await storage.incrementArticleViewCount(article.id);
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching article:", error);
+      res.status(500).json({ message: "Failed to fetch article" });
+    }
+  });
+
+  app.post('/api/knowledge-base/articles/:id/helpful', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.incrementArticleHelpfulCount(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating helpful count:", error);
+      res.status(500).json({ message: "Failed to update helpful count" });
+    }
+  });
+
+  // Site Settings routes
+  app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getSiteSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.put('/api/admin/settings/:key', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value, type } = req.body;
+      const setting = await storage.updateSiteSetting(key, value, type);
+      await logAdminAction(req, 'update', 'site_setting', key, req.body);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating setting:", error);
+      res.status(500).json({ message: "Failed to update setting" });
     }
   });
 

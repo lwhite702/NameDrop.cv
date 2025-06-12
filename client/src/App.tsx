@@ -21,6 +21,7 @@ import Privacy from "@/pages/legal/privacy";
 import CookiePolicy from "@/pages/legal/cookie-policy";
 import Help from "@/pages/help";
 import Blog from "@/pages/blog";
+import CVWizard from "@/pages/cv-wizard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();

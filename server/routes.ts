@@ -661,10 +661,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Optimization Routes (Pro users only)
-  app.post('/api/ai/optimize', isAuthenticated, async (req, res) => {
+  app.post('/api/ai/optimize', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (!user.isPro) {
+      if (!user?.isPro) {
         return res.status(403).json({ error: 'AI optimization is a Pro feature' });
       }
 
@@ -682,10 +682,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI CV Section Suggestions (Pro feature)
-  app.post('/api/ai/cv-suggestions', isAuthenticated, async (req, res) => {
+  app.post('/api/ai/cv-suggestions', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (!user.isPro) {
+      if (!user?.isPro) {
         return res.status(403).json({ error: 'CV suggestions is a Pro feature' });
       }
 

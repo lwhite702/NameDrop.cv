@@ -50,15 +50,10 @@ export function CVSuggestionWizard() {
       targetRole: string;
       industry: string;
     }) => {
-      return await apiRequest("/api/ai/cv-suggestions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", "/api/ai/cv-suggestions", data);
+      return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: CVSuggestionResponse) => {
       setSuggestions(data);
     },
   });

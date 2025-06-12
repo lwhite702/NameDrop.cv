@@ -161,3 +161,134 @@ export class AIOptimizationService {
 }
 
 export const aiOptimizationService = new AIOptimizationService();
+
+export interface CVSuggestion {
+  section: string;
+  originalContent: string;
+  improvedContent: string;
+  suggestions: string[];
+  reasoning: string;
+  impact: "high" | "medium" | "low";
+  keywords: string[];
+}
+
+export interface CVSuggestionResponse {
+  suggestions: CVSuggestion[];
+  overallScore: number;
+  improvementAreas: string[];
+  strengthAreas: string[];
+}
+
+export class CVSuggestionService {
+  async generateSectionSuggestions(
+    section: string,
+    content: string,
+    targetRole?: string,
+    industry?: string
+  ): Promise<CVSuggestionResponse> {
+    const prompt = this.buildSuggestionPrompt(section, content, targetRole, industry);
+
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert CV optimization consultant with deep knowledge of recruitment practices across industries. 
+            Analyze the provided CV section and provide detailed, actionable suggestions for improvement.
+            
+            Focus on:
+            - Impact-driven language and quantifiable achievements
+            - Industry-specific keywords and terminology
+            - ATS (Applicant Tracking System) optimization
+            - Professional presentation and clarity
+            - Relevance to target role and industry
+            
+            Respond with valid JSON only, no additional text.`
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+      return this.validateAndFormatResponse(result, section, content);
+    } catch (error) {
+      console.error("CV suggestion generation failed:", error);
+      throw new Error("Failed to generate CV suggestions");
+    }
+  }
+
+  private buildSuggestionPrompt(
+    section: string,
+    content: string,
+    targetRole?: string,
+    industry?: string
+  ): string {
+    const roleContext = targetRole ? `Target Role: ${targetRole}` : "";
+    const industryContext = industry ? `Industry: ${industry}` : "";
+    
+    return `
+Analyze this CV ${section} section and provide optimization suggestions:
+
+${roleContext}
+${industryContext}
+
+Current Content:
+"${content}"
+
+Provide a JSON response with this structure:
+{
+  "suggestions": [{
+    "section": "${section}",
+    "originalContent": "original text excerpt",
+    "improvedContent": "enhanced version",
+    "suggestions": ["specific improvement tip 1", "specific improvement tip 2"],
+    "reasoning": "explanation of why these changes improve the content",
+    "impact": "high|medium|low",
+    "keywords": ["relevant keyword 1", "relevant keyword 2"]
+  }],
+  "overallScore": 75,
+  "improvementAreas": ["area that needs improvement"],
+  "strengthAreas": ["existing strength in the content"]
+}
+
+Focus on:
+- Action verbs and quantifiable achievements
+- Industry-specific terminology and keywords
+- ATS optimization
+- Professional impact and clarity
+- Relevance to target role/industry
+    `.trim();
+  }
+
+  private validateAndFormatResponse(
+    result: any,
+    section: string,
+    originalContent: string
+  ): CVSuggestionResponse {
+    // Ensure response has required structure
+    const suggestions: CVSuggestion[] = (result.suggestions || []).map((suggestion: any) => ({
+      section: suggestion.section || section,
+      originalContent: suggestion.originalContent || originalContent.substring(0, 200),
+      improvedContent: suggestion.improvedContent || "",
+      suggestions: Array.isArray(suggestion.suggestions) ? suggestion.suggestions : [],
+      reasoning: suggestion.reasoning || "",
+      impact: ["high", "medium", "low"].includes(suggestion.impact) ? suggestion.impact : "medium",
+      keywords: Array.isArray(suggestion.keywords) ? suggestion.keywords : []
+    }));
+
+    return {
+      suggestions,
+      overallScore: Math.min(100, Math.max(0, result.overallScore || 50)),
+      improvementAreas: Array.isArray(result.improvementAreas) ? result.improvementAreas : [],
+      strengthAreas: Array.isArray(result.strengthAreas) ? result.strengthAreas : []
+    };
+  }
+}
+
+export const cvSuggestionService = new CVSuggestionService();

@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink, Eye } from "lucide-react";
 
 export function CVPreview() {
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-[600px] w-full">
+    <div className="bg-white dark:bg-gray-900 w-full relative overflow-hidden">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-8 border-b">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -47,7 +47,7 @@ export function CVPreview() {
         </div>
       </div>
 
-      <div className="p-8 space-y-8">
+      <div className="p-8 space-y-8 relative">
         {/* Skills Section */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -66,7 +66,7 @@ export function CVPreview() {
           </div>
         </div>
 
-        {/* Experience Section */}
+        {/* Experience Section - Partial */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
             <div className="w-1 h-6 bg-primary rounded-full mr-3"></div>
@@ -88,14 +88,11 @@ export function CVPreview() {
                   <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
                   <span>Mentored team of 5 junior developers and established code review best practices</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                  <span>Reduced deployment time by 60% through CI/CD pipeline optimization</span>
-                </li>
               </ul>
             </Card>
 
-            <Card className="p-6 border-l-4 border-l-gray-300 shadow-sm hover:shadow-md transition-shadow">
+            {/* Second job card with partial opacity to show fade effect */}
+            <Card className="p-6 border-l-4 border-l-gray-300 shadow-sm hover:shadow-md transition-shadow opacity-70">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Software Engineer</h3>
                 <span className="text-gray-500 font-semibold">2019 - 2021</span>
@@ -106,57 +103,24 @@ export function CVPreview() {
                   <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Built responsive web applications using React, Express, and MongoDB</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <span>Implemented real-time features with WebSocket connections</span>
-                </li>
               </ul>
             </Card>
           </div>
         </div>
+      </div>
 
-        {/* Projects Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <div className="w-1 h-6 bg-primary rounded-full mr-3"></div>
-            Featured Projects
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">E-Commerce Platform</h3>
-                <Button variant="ghost" size="sm">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
-                Full-stack e-commerce solution with real-time inventory, payment processing, and admin dashboard.
-              </p>
-              <div className="flex flex-wrap gap-1">
-                <Badge variant="secondary" className="text-xs">React</Badge>
-                <Badge variant="secondary" className="text-xs">Node.js</Badge>
-                <Badge variant="secondary" className="text-xs">Stripe</Badge>
-              </div>
-            </Card>
-
-            <Card className="p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Analytics Dashboard</h3>
-                <Button variant="ghost" size="sm">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
-                Real-time data visualization platform processing millions of events daily.
-              </p>
-              <div className="flex flex-wrap gap-1">
-                <Badge variant="secondary" className="text-xs">TypeScript</Badge>
-                <Badge variant="secondary" className="text-xs">D3.js</Badge>
-                <Badge variant="secondary" className="text-xs">AWS</Badge>
-              </div>
-            </Card>
-          </div>
-        </div>
+      {/* Fade Overlay and CTA */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 h-32 flex items-end justify-center pb-6">
+        <Button 
+          size="lg" 
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 shadow-lg backdrop-blur-sm"
+          asChild
+        >
+          <a href="/preview/alexsmith" target="_blank" rel="noopener noreferrer">
+            <Eye className="mr-2 h-4 w-4" />
+            View Full Demo Profile
+          </a>
+        </Button>
       </div>
     </div>
   );

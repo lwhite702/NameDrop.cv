@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertProfileSchema } from "@shared/schema";
 import { resumeFormatterAPI, prepPairAPI } from "./integrations";
-import { aiOptimizationService } from "./openai";
+import { aiOptimizationService, cvSuggestionService } from "./openai";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";
@@ -678,6 +678,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('AI optimization error:', error);
       res.status(500).json({ error: error.message || 'Failed to optimize CV' });
+    }
+  });
+
+  // AI CV Section Suggestions (Pro feature)
+  app.post('/api/ai/cv-suggestions', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user.isPro) {
+        return res.status(403).json({ error: 'CV suggestions is a Pro feature' });
+      }
+
+      const { section, content, targetRole, industry } = req.body;
+
+      if (!section || !content?.trim()) {
+        return res.status(400).json({ error: 'Section and content are required' });
+      }
+
+      const result = await cvSuggestionService.generateSectionSuggestions(
+        section,
+        content.trim(),
+        targetRole?.trim(),
+        industry?.trim()
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('CV suggestions error:', error);
+      res.status(500).json({ error: error.message || 'Failed to generate CV suggestions' });
     }
   });
 

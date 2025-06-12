@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HeroWithMockup } from "@/components/blocks/hero-with-mockup";
 import { 
   Edit, 
   Upload, 
@@ -17,7 +18,8 @@ import {
   Search,
   ExternalLink,
   Share,
-  FileText
+  FileText,
+  Github
 } from "lucide-react";
 
 export default function Landing() {

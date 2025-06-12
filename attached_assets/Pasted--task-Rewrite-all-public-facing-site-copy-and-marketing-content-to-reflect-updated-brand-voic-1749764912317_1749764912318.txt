@@ -1,0 +1,65 @@
+{
+  "task": "Rewrite all public-facing site copy and marketing content to reflect updated brand voice and positioning.",
+  "brands": [
+    {
+      "name": "Wrelik Brands",
+      "tone": "Strategic, Empowering, Clear, Forward-Thinking",
+      "description": "Wrelik Brands is the parent company behind ResumeFormatter.io, PrepPair.me, and NameDrop.cv. It provides smart, AI-powered tools for job seekers, freelancers, and digital professionals. The tone should be confident, modern, and focused on clarity and empowerment.",
+      "voice_directives": [
+        "Speak with purpose and precision",
+        "Avoid hype or filler",
+        "Emphasize user enablement and future-ready tools"
+      ],
+      "example_phrase": "Behind every Wrelik product is a clear purpose: give modern professionals the tools to build boldly — and own their success."
+    },
+    {
+      "name": "ResumeFormatter.io",
+      "tone": "Clean, Professional, Efficient, Helpful",
+      "description": "ResumeFormatter.io helps users create clean, ATS-optimized resumes using Markdown. It’s designed for developers, career changers, freelancers, and students. The voice should be smart, efficient, and resume-industry savvy.",
+      "voice_directives": [
+        "Prioritize clarity, structure, and outcome",
+        "Be slightly formal but still human",
+        "Avoid fluff — help users act with confidence"
+      ],
+      "example_phrase": "Your resume should work as hard as you do. Markdown keeps it flexible — we make it beautiful."
+    },
+    {
+      "name": "PrepPair.me",
+      "tone": "Friendly, Supportive, Strategic, Conversational",
+      "description": "PrepPair.me is an AI-powered interview prep platform. It generates personalized interview guides, follow-ups, and thank-you notes based on user resumes and job descriptions. Speak like a supportive mentor who gets the pressure of job hunting.",
+      "voice_directives": [
+        "Use a conversational, motivational tone",
+        "Be warm and approachable, but grounded in expertise",
+        "Make the user feel supported and smarter after reading"
+      ],
+      "example_phrase": "Big interview coming up? We’ve got your back — with prep tips, smart insights, and a game plan built just for you."
+    },
+    {
+      "name": "NameDrop.cv",
+      "tone": "Bold, Personal, Credible, Approachable",
+      "description": "NameDrop.cv is a personal CV and credential landing page builder with link-in-bio style sharing and optional verification. Ideal for modern professionals, creators, and freelancers. The tone should be confident, stylish, and trustworthy.",
+      "voice_directives": [
+        "Highlight personal branding and identity",
+        "Be expressive without being flashy",
+        "Educate about verification and custom domains accessibly"
+      ],
+      "example_phrase": "Your personal brand deserves more than a plain link. Drop your Name, stand out your way."
+    }
+  ],
+  "deliverables": [
+    "Homepage hero copy",
+    "SEO meta title and descriptions",
+    "Feature descriptions",
+    "CTA buttons and banners",
+    "Email subject lines and welcome copy",
+    "Pricing page descriptions",
+    "Blog author bios and article intros",
+    "Product descriptions for app stores or promo cards"
+  ],
+  "style_guidelines": {
+    "formatting": "Use clean HTML or Markdown depending on context",
+    "length": "Keep hero statements under 15 words; meta descriptions between 140-160 characters",
+    "clarity": "Avoid jargon unless explicitly speaking to technical users",
+    "voice_consistency": "Match tone to brand directives for each product"
+  }
+}

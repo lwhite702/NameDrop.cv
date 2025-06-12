@@ -29,10 +29,10 @@ export default function Landing() {
       
       {/* Hero Section */}
       <HeroWithMockup
-        title="Your Professional CV, Beautifully Presented"
-        description="Create stunning, mobile-optimized CV websites with your own subdomain. Import your resume, customize your theme, and showcase your professional story."
+        title="Drop Your Name, Stand Out Your Way"
+        description="Create your personal CV website with custom branding, verification badges, and professional credibility. Your story deserves more than a plain link."
         primaryCta={{
-          text: "Start Building Free",
+          text: "Build Your CV Site",
           href: "/api/login"
         }}
         secondaryCta={{
@@ -49,9 +49,9 @@ export default function Landing() {
       <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need to Shine</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Professional Identity, Amplified</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Professional CV creation made simple with powerful features and beautiful templates.
+              Build credibility with verification, custom domains, and smart integrations that work for you.
             </p>
           </div>
           
@@ -61,8 +61,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Edit className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Live CV Editor</h3>
-                <p className="text-muted-foreground">Real-time editing with instant preview. See changes as you type and perfect your professional story.</p>
+                <h3 className="text-xl font-semibold mb-4">Smart CV Builder</h3>
+                <p className="text-muted-foreground">Create your story with real-time editing. What you see is what your audience gets—polished and professional.</p>
               </CardContent>
             </Card>
             
@@ -71,8 +71,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Resume Import</h3>
-                <p className="text-muted-foreground">Upload your existing resume and we'll automatically parse and format it for the web.</p>
+                <h3 className="text-xl font-semibold mb-4">Instant Import</h3>
+                <p className="text-muted-foreground">Bring your existing resume to life online. Upload once, share everywhere with confidence.</p>
               </CardContent>
             </Card>
             
@@ -81,8 +81,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Palette className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Beautiful Themes</h3>
-                <p className="text-muted-foreground">Choose from professionally designed templates that make your CV stand out from the crowd.</p>
+                <h3 className="text-xl font-semibold mb-4">Personal Branding</h3>
+                <p className="text-muted-foreground">Express your unique style with themes that reflect who you are. Stand out authentically.</p>
               </CardContent>
             </Card>
             
@@ -91,8 +91,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Globe className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Custom Subdomain</h3>
-                <p className="text-muted-foreground">Get your own professional URL like yourname.namedrop.cv to share with employers.</p>
+                <h3 className="text-xl font-semibold mb-4">Your Name, Your Domain</h3>
+                <p className="text-muted-foreground">Claim yourname.namedrop.cv and own your professional presence. Share one link that says it all.</p>
               </CardContent>
             </Card>
             
@@ -101,8 +101,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Smartphone className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Mobile Optimized</h3>
-                <p className="text-muted-foreground">Your CV looks perfect on all devices with responsive design and fast loading times.</p>
+                <h3 className="text-xl font-semibold mb-4">Always Accessible</h3>
+                <p className="text-muted-foreground">Your professional story looks sharp on every screen. Desktop meetings, mobile networking—you're ready.</p>
               </CardContent>
             </Card>
             
@@ -111,8 +111,8 @@ export default function Landing() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-4">Analytics & Insights</h3>
-                <p className="text-muted-foreground">Track profile views, resume downloads, and engagement to optimize your professional presence.</p>
+                <h3 className="text-xl font-semibold mb-4">Know Your Impact</h3>
+                <p className="text-muted-foreground">See who's viewing your profile and downloading your CV. Data that helps you understand your reach.</p>
               </CardContent>
             </Card>
           </div>

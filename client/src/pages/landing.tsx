@@ -123,8 +123,8 @@ export default function Landing() {
       <section id="demo" className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Intuitive CV Builder</h2>
-            <p className="text-xl text-muted-foreground">Create and edit your professional CV with our powerful yet simple editor.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Build Your Story, Your Way</h2>
+            <p className="text-xl text-muted-foreground">Powerful editing that feels natural. Your professional narrative, crafted with confidence.</p>
           </div>
           
           <Card className="overflow-hidden shadow-2xl">

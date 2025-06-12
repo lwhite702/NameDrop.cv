@@ -12,22 +12,22 @@ export default function Pricing() {
 
   const features = {
     free: [
-      "1 Professional CV",
-      "namedrop.cv subdomain",
-      "3 Coral-themed templates",
-      "Mobile responsive design",
-      "Resume import",
-      "Basic analytics",
+      "Professional CV website",
+      "yourname.namedrop.cv domain",
+      "Personal branding themes",
+      "Mobile-optimized design", 
+      "Resume import & editing",
+      "View & download tracking",
     ],
     pro: [
       "Everything in Free",
-      "Custom domain connection",
-      "Advanced analytics dashboard",
-      "PDF export functionality",
-      "Verified badge",
+      "Custom domain & SSL",
+      "Professional verification badge",
+      "Advanced analytics insights",
+      "50% off PrepPair.me", 
+      "AI-powered CV optimization",
       "Priority support",
-      "SEO optimization tools",
-      "Custom themes (coming soon)",
+      "Enhanced SEO features",
     ],
   };
 
@@ -40,10 +40,10 @@ export default function Pricing() {
           {/* Header */}
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Simple, Transparent Pricing
+              Own Your Professional Story
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Start free, upgrade when you're ready to unlock advanced features and take your professional presence to the next level.
+              Start building for free. Upgrade to Pro when you're ready to amplify your credibility and unlock custom domains.
             </p>
           </div>
 

@@ -24,14 +24,14 @@ export default function CVWizard() {
             </Link>
             
             <div className="flex items-center gap-3 mb-4">
-              <h1 className="text-3xl font-bold">AI CV Suggestion Wizard</h1>
+              <h1 className="text-3xl font-bold">Smart CV Optimization</h1>
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white">
                 <Crown className="h-3 w-3 mr-1" />
                 Pro Feature
               </Badge>
             </div>
             <p className="text-lg text-muted-foreground max-w-3xl">
-              Get intelligent, AI-powered suggestions to optimize your CV sections for maximum impact and ATS compatibility.
+              AI-powered insights to strengthen your professional story. Get targeted suggestions that make your experience shine.
             </p>
           </div>
 
@@ -40,31 +40,31 @@ export default function CVWizard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Unlock AI-Powered CV Optimization
+                Amplify Your Professional Story
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6 items-center">
                 <div>
                   <p className="mb-4 text-muted-foreground">
-                    Our AI analyzes your CV content and provides personalized suggestions to:
+                    Smart insights that strengthen your professional narrative:
                   </p>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                      Optimize for Applicant Tracking Systems (ATS)
+                      ATS-friendly optimization for better visibility
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                      Add impact-driven language and quantifiable achievements
+                      Impact-driven language that showcases achievements
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                      Include industry-specific keywords
+                      Industry keywords that resonate with employers
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                      Improve professional presentation and clarity
+                      Professional clarity that builds credibility
                     </li>
                   </ul>
                 </div>

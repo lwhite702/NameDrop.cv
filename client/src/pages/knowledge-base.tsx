@@ -79,9 +79,9 @@ export default function KnowledgeBase() {
         <div className="container text-center">
           <div className="mx-auto max-w-3xl">
             <BookOpen className="h-16 w-16 mx-auto mb-6 text-primary" />
-            <h1 className="text-4xl font-bold mb-4">Knowledge Base</h1>
+            <h1 className="text-4xl font-bold mb-4">Build With Confidence</h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Everything you need to know about creating and optimizing your professional CV with NameDrop
+              Expert guidance for creating your professional CV website. Your success story starts here.
             </p>
             
             <div className="relative max-w-md mx-auto">

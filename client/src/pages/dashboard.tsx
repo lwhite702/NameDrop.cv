@@ -19,7 +19,9 @@ import {
   Settings,
   ExternalLink,
   Share,
-  FileText
+  FileText,
+  Wand2,
+  Crown
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatNumber } from "@/lib/utils";
@@ -155,6 +157,14 @@ export default function Dashboard() {
                         <Link href="/editor">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit CV
+                        </Link>
+                      </Button>
+                      
+                      <Button asChild size="sm" variant="outline" className="border-primary/20 hover:bg-primary/5">
+                        <Link href="/cv-wizard">
+                          <Wand2 className="h-4 w-4 mr-2" />
+                          AI Suggestions
+                          <Crown className="h-3 w-3 ml-1 text-primary" />
                         </Link>
                       </Button>
                       

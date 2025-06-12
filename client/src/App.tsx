@@ -46,6 +46,7 @@ function Router() {
           <Route path="/editor" component={Editor} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/settings" component={Settings} />
+          <Route path="/cv-wizard" component={CVWizard} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/preview/:slug" component={Preview} />

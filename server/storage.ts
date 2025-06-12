@@ -5,6 +5,10 @@ import {
   moderationReports,
   linkClicks,
   domainVerifications,
+  knowledgeBaseCategories,
+  knowledgeBaseArticles,
+  siteSettings,
+  adminLogs,
   type User,
   type UpsertUser,
   type InsertProfile,
@@ -13,6 +17,14 @@ import {
   type ModerationReport,
   type LinkClick,
   type DomainVerification,
+  type KnowledgeBaseCategory,
+  type InsertKnowledgeBaseCategory,
+  type KnowledgeBaseArticle,
+  type InsertKnowledgeBaseArticle,
+  type SiteSetting,
+  type InsertSiteSetting,
+  type AdminLog,
+  type InsertAdminLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gte, sql } from "drizzle-orm";
@@ -59,6 +71,28 @@ export interface IStorage {
   createModerationReport(profileId: number, reportedBy: string, reason: string): Promise<ModerationReport>;
   getModerationReports(): Promise<ModerationReport[]>;
   updateModerationReport(reportId: number, status: string): Promise<ModerationReport>;
+  logAdminAction(adminId: string, action: string, resourceType: string, resourceId?: string, details?: any, ipAddress?: string, userAgent?: string): Promise<AdminLog>;
+  getAdminLogs(limit?: number): Promise<AdminLog[]>;
+  
+  // Knowledge Base operations
+  createKnowledgeBaseCategory(category: InsertKnowledgeBaseCategory): Promise<KnowledgeBaseCategory>;
+  getKnowledgeBaseCategories(): Promise<KnowledgeBaseCategory[]>;
+  updateKnowledgeBaseCategory(id: number, updates: Partial<InsertKnowledgeBaseCategory>): Promise<KnowledgeBaseCategory>;
+  deleteKnowledgeBaseCategory(id: number): Promise<void>;
+  
+  createKnowledgeBaseArticle(article: InsertKnowledgeBaseArticle): Promise<KnowledgeBaseArticle>;
+  getKnowledgeBaseArticles(categoryId?: number, published?: boolean): Promise<KnowledgeBaseArticle[]>;
+  getKnowledgeBaseArticleBySlug(slug: string): Promise<KnowledgeBaseArticle | undefined>;
+  updateKnowledgeBaseArticle(id: number, updates: Partial<InsertKnowledgeBaseArticle>): Promise<KnowledgeBaseArticle>;
+  deleteKnowledgeBaseArticle(id: number): Promise<void>;
+  incrementArticleViewCount(id: number): Promise<void>;
+  incrementArticleHelpfulCount(id: number): Promise<void>;
+  
+  // Site Settings operations
+  getSiteSettings(): Promise<SiteSetting[]>;
+  getSiteSetting(key: string): Promise<SiteSetting | undefined>;
+  updateSiteSetting(key: string, value: string, type: string): Promise<SiteSetting>;
+  createSiteSetting(setting: InsertSiteSetting): Promise<SiteSetting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -407,6 +441,163 @@ export class DatabaseStorage implements IStorage {
       .where(eq(moderationReports.id, reportId))
       .returning();
     return report;
+  }
+
+  async logAdminAction(adminId: string, action: string, resourceType: string, resourceId?: string, details?: any, ipAddress?: string, userAgent?: string): Promise<AdminLog> {
+    const [log] = await db
+      .insert(adminLogs)
+      .values({
+        adminId,
+        action,
+        resourceType,
+        resourceId,
+        details,
+        ipAddress,
+        userAgent,
+      })
+      .returning();
+    return log;
+  }
+
+  async getAdminLogs(limit: number = 50): Promise<AdminLog[]> {
+    return await db
+      .select()
+      .from(adminLogs)
+      .orderBy(desc(adminLogs.createdAt))
+      .limit(limit);
+  }
+
+  // Knowledge Base operations
+  async createKnowledgeBaseCategory(category: InsertKnowledgeBaseCategory): Promise<KnowledgeBaseCategory> {
+    const [newCategory] = await db
+      .insert(knowledgeBaseCategories)
+      .values(category)
+      .returning();
+    return newCategory;
+  }
+
+  async getKnowledgeBaseCategories(): Promise<KnowledgeBaseCategory[]> {
+    return await db
+      .select()
+      .from(knowledgeBaseCategories)
+      .where(eq(knowledgeBaseCategories.isActive, true))
+      .orderBy(knowledgeBaseCategories.sortOrder);
+  }
+
+  async updateKnowledgeBaseCategory(id: number, updates: Partial<InsertKnowledgeBaseCategory>): Promise<KnowledgeBaseCategory> {
+    const [updated] = await db
+      .update(knowledgeBaseCategories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(knowledgeBaseCategories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteKnowledgeBaseCategory(id: number): Promise<void> {
+    await db
+      .update(knowledgeBaseCategories)
+      .set({ isActive: false })
+      .where(eq(knowledgeBaseCategories.id, id));
+  }
+
+  async createKnowledgeBaseArticle(article: InsertKnowledgeBaseArticle): Promise<KnowledgeBaseArticle> {
+    const [newArticle] = await db
+      .insert(knowledgeBaseArticles)
+      .values(article)
+      .returning();
+    return newArticle;
+  }
+
+  async getKnowledgeBaseArticles(categoryId?: number, published?: boolean): Promise<KnowledgeBaseArticle[]> {
+    let query = db.select().from(knowledgeBaseArticles);
+    
+    const conditions = [];
+    if (categoryId) {
+      conditions.push(eq(knowledgeBaseArticles.categoryId, categoryId));
+    }
+    if (published !== undefined) {
+      conditions.push(eq(knowledgeBaseArticles.isPublished, published));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(knowledgeBaseArticles.sortOrder, desc(knowledgeBaseArticles.createdAt));
+  }
+
+  async getKnowledgeBaseArticleBySlug(slug: string): Promise<KnowledgeBaseArticle | undefined> {
+    const [article] = await db
+      .select()
+      .from(knowledgeBaseArticles)
+      .where(eq(knowledgeBaseArticles.slug, slug));
+    return article;
+  }
+
+  async updateKnowledgeBaseArticle(id: number, updates: Partial<InsertKnowledgeBaseArticle>): Promise<KnowledgeBaseArticle> {
+    const [updated] = await db
+      .update(knowledgeBaseArticles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(knowledgeBaseArticles.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteKnowledgeBaseArticle(id: number): Promise<void> {
+    await db
+      .delete(knowledgeBaseArticles)
+      .where(eq(knowledgeBaseArticles.id, id));
+  }
+
+  async incrementArticleViewCount(id: number): Promise<void> {
+    await db
+      .update(knowledgeBaseArticles)
+      .set({ 
+        viewCount: sql`${knowledgeBaseArticles.viewCount} + 1` 
+      })
+      .where(eq(knowledgeBaseArticles.id, id));
+  }
+
+  async incrementArticleHelpfulCount(id: number): Promise<void> {
+    await db
+      .update(knowledgeBaseArticles)
+      .set({ 
+        helpfulCount: sql`${knowledgeBaseArticles.helpfulCount} + 1` 
+      })
+      .where(eq(knowledgeBaseArticles.id, id));
+  }
+
+  // Site Settings operations
+  async getSiteSettings(): Promise<SiteSetting[]> {
+    return await db.select().from(siteSettings);
+  }
+
+  async getSiteSetting(key: string): Promise<SiteSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(siteSettings)
+      .where(eq(siteSettings.key, key));
+    return setting;
+  }
+
+  async updateSiteSetting(key: string, value: string, type: string): Promise<SiteSetting> {
+    const [updated] = await db
+      .insert(siteSettings)
+      .values({ key, value, type, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: siteSettings.key,
+        set: { value, type, updatedAt: new Date() }
+      })
+      .returning();
+    return updated;
+  }
+
+  async createSiteSetting(setting: InsertSiteSetting): Promise<SiteSetting> {
+    const [newSetting] = await db
+      .insert(siteSettings)
+      .values(setting)
+      .returning();
+    return newSetting;
   }
 }
 

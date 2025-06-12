@@ -115,9 +115,77 @@ export const domainVerifications = pgTable("domain_verifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Knowledge Base tables
+export const knowledgeBaseCategories = pgTable("knowledge_base_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  description: text("description"),
+  icon: varchar("icon"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const knowledgeBaseArticles = pgTable("knowledge_base_articles", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => knowledgeBaseCategories.id, { onDelete: "cascade" }),
+  title: varchar("title").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  metaTitle: varchar("meta_title"),
+  metaDescription: text("meta_description"),
+  featuredImage: varchar("featured_image"),
+  author: varchar("author").notNull(),
+  tags: text("tags").array(),
+  sortOrder: integer("sort_order").default(0),
+  isPublished: boolean("is_published").default(false),
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  helpfulCount: integer("helpful_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key").notNull().unique(),
+  value: text("value"),
+  type: varchar("type").notNull(), // string, number, boolean, json
+  description: text("description"),
+  isPublic: boolean("is_public").default(false),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const adminLogs = pgTable("admin_logs", {
+  id: serial("id").primaryKey(),
+  adminId: varchar("admin_id").notNull().references(() => users.id),
+  action: varchar("action").notNull(),
+  resourceType: varchar("resource_type").notNull(),
+  resourceId: varchar("resource_id"),
+  details: jsonb("details"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+export type KnowledgeBaseCategory = typeof knowledgeBaseCategories.$inferSelect;
+export type InsertKnowledgeBaseCategory = typeof knowledgeBaseCategories.$inferInsert;
+
+export type KnowledgeBaseArticle = typeof knowledgeBaseArticles.$inferSelect;
+export type InsertKnowledgeBaseArticle = typeof knowledgeBaseArticles.$inferInsert;
+
+export type SiteSetting = typeof siteSettings.$inferSelect;
+export type InsertSiteSetting = typeof siteSettings.$inferInsert;
+
+export type AdminLog = typeof adminLogs.$inferSelect;
+export type InsertAdminLog = typeof adminLogs.$inferInsert;
 
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,

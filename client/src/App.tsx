@@ -22,6 +22,8 @@ import CookiePolicy from "@/pages/legal/cookie-policy";
 import Help from "@/pages/help";
 import Blog from "@/pages/blog";
 import CVWizard from "@/pages/cv-wizard";
+import KnowledgeBase from "@/pages/knowledge-base";
+import KnowledgeBaseArticle from "@/pages/knowledge-base-article";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -53,6 +55,8 @@ function Router() {
           <Route path="/admin" component={Admin} />
           <Route path="/blog" component={Blog} />
           <Route path="/help" component={Help} />
+          <Route path="/knowledge-base" component={KnowledgeBase} />
+          <Route path="/knowledge-base/:slug" component={KnowledgeBaseArticle} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/cookie-policy" component={CookiePolicy} />

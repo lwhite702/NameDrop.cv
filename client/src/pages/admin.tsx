@@ -1,79 +1,158 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest } from "@/lib/queryClient";
-import { formatDate, formatNumber } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
-  Shield, 
   Users, 
   FileText, 
-  AlertTriangle, 
-  Ban, 
-  CheckCircle, 
-  XCircle,
-  TrendingUp,
+  Settings, 
+  Activity, 
+  Plus, 
+  Edit, 
+  Trash2, 
   Eye,
-  Download
+  Ban,
+  Shield,
+  BookOpen,
+  FolderOpen,
+  Search,
+  Filter
 } from "lucide-react";
+
+interface AdminUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isPro: boolean;
+  isAdmin: boolean;
+  isBanned: boolean;
+  createdAt: string;
+}
+
+interface AdminProfile {
+  id: number;
+  userId: string;
+  slug: string;
+  name: string;
+  isPublished: boolean;
+  viewCount: number;
+  downloadCount: number;
+  createdAt: string;
+}
+
+interface KnowledgeBaseCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+interface KnowledgeBaseArticle {
+  id: number;
+  categoryId: number;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  author: string;
+  isPublished: boolean;
+  isFeatured: boolean;
+  viewCount: number;
+  helpfulCount: number;
+  createdAt: string;
+}
+
+interface AdminLog {
+  id: number;
+  adminId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  details: any;
+  createdAt: string;
+}
 
 export default function Admin() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [isCreateArticleOpen, setIsCreateArticleOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<KnowledgeBaseCategory | null>(null);
+  const [editingArticle, setEditingArticle] = useState<KnowledgeBaseArticle | null>(null);
 
-  // Redirect to home if not authenticated or not admin
+  // Redirect to home if not authenticated
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || !user?.isAdmin)) {
+    if (!authLoading && !isAuthenticated) {
       toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this page.",
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
+        window.location.href = "/api/login";
+      }, 500);
       return;
     }
-  }, [isAuthenticated, authLoading, user, toast]);
+  }, [isAuthenticated, authLoading, toast]);
 
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ["/api/admin/users"],
-    enabled: !!user?.isAdmin,
+    enabled: isAuthenticated,
     retry: false,
   });
 
   const { data: profiles, isLoading: profilesLoading } = useQuery({
     queryKey: ["/api/admin/profiles"],
-    enabled: !!user?.isAdmin,
+    enabled: isAuthenticated,
     retry: false,
   });
 
-  const { data: reports, isLoading: reportsLoading } = useQuery({
-    queryKey: ["/api/admin/reports"],
-    enabled: !!user?.isAdmin,
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["/api/admin/knowledge-base/categories"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  const { data: articles, isLoading: articlesLoading } = useQuery({
+    queryKey: ["/api/admin/knowledge-base/articles"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  const { data: logs, isLoading: logsLoading } = useQuery({
+    queryKey: ["/api/admin/logs"],
+    enabled: isAuthenticated,
     retry: false,
   });
 
   const banUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/ban`);
+      await apiRequest(`/api/admin/users/${userId}/ban`, { method: "POST" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({
-        title: "User banned",
-        description: "The user has been banned successfully.",
-      });
+      toast({ title: "User banned successfully" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -87,406 +166,609 @@ export default function Admin() {
         }, 500);
         return;
       }
-      toast({
-        title: "Failed to ban user",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Failed to ban user", variant: "destructive" });
     },
   });
 
-  const handleBanUser = (userId: string) => {
-    if (confirm("Are you sure you want to ban this user?")) {
-      banUserMutation.mutate(userId);
-    }
-  };
+  const unbanUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest(`/api/admin/users/${userId}/unban`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "User unbanned successfully" });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({ title: "Failed to unban user", variant: "destructive" });
+    },
+  });
 
-  if (authLoading) {
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("/api/admin/knowledge-base/categories", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/knowledge-base/categories"] });
+      setIsCreateCategoryOpen(false);
+      toast({ title: "Category created successfully" });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({ title: "Failed to create category", variant: "destructive" });
+    },
+  });
+
+  const createArticleMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("/api/admin/knowledge-base/articles", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/knowledge-base/articles"] });
+      setIsCreateArticleOpen(false);
+      toast({ title: "Article created successfully" });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({ title: "Failed to create article", variant: "destructive" });
+    },
+  });
+
+  if (!isAuthenticated || authLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="pt-24 flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
-
-  if (!user?.isAdmin) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <Card className="p-8">
-              <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-              <p className="text-muted-foreground mb-6">
-                You don't have permission to access the admin dashboard.
-              </p>
-              <Button asChild>
-                <a href="/">Go Home</a>
-              </Button>
-            </Card>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  const totalUsers = users?.length || 0;
-  const proUsers = users?.filter((u: any) => u.isPro)?.length || 0;
-  const bannedUsers = users?.filter((u: any) => u.isBanned)?.length || 0;
-  const publishedProfiles = profiles?.filter((p: any) => p.isPublished)?.length || 0;
-  const totalViews = profiles?.reduce((sum: number, p: any) => sum + (p.viewCount || 0), 0) || 0;
-  const totalDownloads = profiles?.reduce((sum: number, p: any) => sum + (p.downloadCount || 0), 0) || 0;
-
-  const filteredUsers = users?.filter((user: any) => 
-    user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 flex items-center">
-              <Shield className="h-8 w-8 mr-3" />
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Manage users, monitor content, and oversee platform health.
-            </p>
+      <main className="container py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage users, content, and site settings</p>
           </div>
+          <Badge variant="secondary" className="bg-primary/10 text-primary">
+            <Shield className="h-3 w-3 mr-1" />
+            Administrator
+          </Badge>
+        </div>
 
-          {/* Overview Stats */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-                    <p className="text-3xl font-bold">{formatNumber(totalUsers)}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="profiles">Profiles</TabsTrigger>
+            <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="logs">Activity Logs</TabsTrigger>
+          </TabsList>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pro Users</p>
-                    <p className="text-3xl font-bold">{formatNumber(proUsers)}</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Published CVs</p>
-                    <p className="text-3xl font-bold">{formatNumber(publishedProfiles)}</p>
-                  </div>
-                  <FileText className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Views</p>
-                    <p className="text-3xl font-bold">{formatNumber(totalViews)}</p>
-                  </div>
-                  <Eye className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="users" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="profiles">Profiles</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
-
-            {/* Users Tab */}
-            <TabsContent value="users" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                  <div className="flex justify-between items-center">
-                    <Input
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                  </div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
+                  <div className="text-2xl font-bold">{users?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {users?.filter((u: AdminUser) => u.isPro).length || 0} Pro users
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Published Profiles</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {profiles?.filter((p: AdminProfile) => p.isPublished).length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {profiles?.length || 0} total profiles
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">KB Articles</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {articles?.filter((a: KnowledgeBaseArticle) => a.isPublished).length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {articles?.length || 0} total articles
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{logs?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Admin actions today</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">User Management</h2>
+              <div className="flex items-center space-x-2">
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80"
+                />
+                <Button variant="outline" size="icon">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                <div className="space-y-4">
                   {usersLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                    <div className="p-6 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading users...</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left py-2 px-4">User</th>
-                            <th className="text-left py-2 px-4">Email</th>
-                            <th className="text-left py-2 px-4">Status</th>
-                            <th className="text-left py-2 px-4">Joined</th>
-                            <th className="text-left py-2 px-4">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredUsers.map((user: any) => (
-                            <tr key={user.id} className="border-b">
-                              <td className="py-3 px-4">
-                                <div>
-                                  <p className="font-medium">
-                                    {user.firstName} {user.lastName}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">ID: {user.id}</p>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">{user.email}</td>
-                              <td className="py-3 px-4">
-                                <div className="flex space-x-2">
-                                  {user.isPro && (
-                                    <Badge className="bg-primary text-white">Pro</Badge>
-                                  )}
-                                  {user.isBanned && (
-                                    <Badge variant="destructive">Banned</Badge>
-                                  )}
-                                  {user.isAdmin && (
-                                    <Badge variant="secondary">Admin</Badge>
-                                  )}
-                                  {!user.isPro && !user.isBanned && !user.isAdmin && (
-                                    <Badge variant="outline">Free</Badge>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-sm text-muted-foreground">
-                                {formatDate(user.createdAt)}
-                              </td>
-                              <td className="py-3 px-4">
-                                {!user.isBanned && user.id !== user?.id && (
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleBanUser(user.id)}
-                                    disabled={banUserMutation.isPending}
-                                  >
-                                    <Ban className="h-4 w-4 mr-1" />
-                                    Ban
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Profiles Tab */}
-            <TabsContent value="profiles" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {profilesLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left py-2 px-4">Profile</th>
-                            <th className="text-left py-2 px-4">URL</th>
-                            <th className="text-left py-2 px-4">Status</th>
-                            <th className="text-left py-2 px-4">Views</th>
-                            <th className="text-left py-2 px-4">Downloads</th>
-                            <th className="text-left py-2 px-4">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {profiles?.map((profile: any) => (
-                            <tr key={profile.id} className="border-b">
-                              <td className="py-3 px-4">
-                                <div>
-                                  <p className="font-medium">{profile.name || 'Untitled'}</p>
-                                  <p className="text-sm text-muted-foreground">{profile.tagline}</p>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <a 
-                                  href={`/preview/${profile.slug}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
-                                >
-                                  {profile.slug}.namedrop.cv
-                                </a>
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge variant={profile.isPublished ? "default" : "secondary"}>
-                                  {profile.isPublished ? 'Published' : 'Draft'}
-                                </Badge>
-                              </td>
-                              <td className="py-3 px-4">{formatNumber(profile.viewCount || 0)}</td>
-                              <td className="py-3 px-4">{formatNumber(profile.downloadCount || 0)}</td>
-                              <td className="py-3 px-4">
-                                <Button variant="outline" size="sm">
-                                  View
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Reports Tab */}
-            <TabsContent value="reports" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Moderation Reports</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {reportsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-                    </div>
-                  ) : reports?.length === 0 ? (
-                    <div className="text-center py-8">
-                      <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Reports</h3>
-                      <p className="text-muted-foreground">No moderation reports have been submitted.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {reports?.map((report: any) => (
-                        <div key={report.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h4 className="font-medium">Report #{report.id}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Reported by: {report.reportedBy}
-                              </p>
+                    users?.map((user: AdminUser) => (
+                      <div key={user.id} className="p-6 border-b last:border-b-0">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-medium">
+                                {user.firstName?.[0]}{user.lastName?.[0]}
+                              </span>
                             </div>
-                            <Badge 
-                              variant={
-                                report.status === 'pending' ? 'secondary' :
-                                report.status === 'reviewed' ? 'default' : 'outline'
-                              }
-                            >
-                              {report.status}
-                            </Badge>
+                            <div>
+                              <p className="font-medium">{user.firstName} {user.lastName}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
                           </div>
-                          <p className="text-sm mb-3">{report.reason}</p>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve
+                          
+                          <div className="flex items-center space-x-2">
+                            {user.isPro && (
+                              <Badge variant="secondary" className="bg-primary/10 text-primary">Pro</Badge>
+                            )}
+                            {user.isAdmin && (
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-700">Admin</Badge>
+                            )}
+                            {user.isBanned && (
+                              <Badge variant="destructive">Banned</Badge>
+                            )}
+                            
+                            {!user.isAdmin && (
+                              <Button
+                                variant={user.isBanned ? "outline" : "destructive"}
+                                size="sm"
+                                onClick={() => user.isBanned ? unbanUserMutation.mutate(user.id) : banUserMutation.mutate(user.id)}
+                                disabled={banUserMutation.isPending || unbanUserMutation.isPending}
+                              >
+                                <Ban className="h-3 w-3 mr-1" />
+                                {user.isBanned ? "Unban" : "Ban"}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="knowledge-base" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Knowledge Base Management</h2>
+              <div className="flex items-center space-x-2">
+                <Dialog open={isCreateCategoryOpen} onOpenChange={setIsCreateCategoryOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      New Category
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Category</DialogTitle>
+                    </DialogHeader>
+                    <CategoryForm onSubmit={(data) => createCategoryMutation.mutate(data)} />
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={isCreateArticleOpen} onOpenChange={setIsCreateArticleOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Article
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Create New Article</DialogTitle>
+                    </DialogHeader>
+                    <ArticleForm 
+                      categories={categories || []} 
+                      onSubmit={(data) => createArticleMutation.mutate(data)} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FolderOpen className="h-5 w-5 mr-2" />
+                    Categories
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {categoriesLoading ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mx-auto"></div>
+                    </div>
+                  ) : (
+                    categories?.map((category: KnowledgeBaseCategory) => (
+                      <div key={category.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{category.name}</p>
+                            <p className="text-sm text-muted-foreground">{category.description}</p>
+                          </div>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Articles
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {articlesLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading articles...</p>
+                    </div>
+                  ) : (
+                    articles?.map((article: KnowledgeBaseArticle) => (
+                      <div key={article.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h3 className="font-medium">{article.title}</h3>
+                              {article.isPublished ? (
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                  Published
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">Draft</Badge>
+                              )}
+                              {article.isFeatured && (
+                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                                  Featured
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{article.excerpt}</p>
+                            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                              <span className="flex items-center">
+                                <Eye className="h-3 w-3 mr-1" />
+                                {article.viewCount} views
+                              </span>
+                              <span>By {article.author}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="destructive">
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Remove
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Platform Statistics</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Total Users:</span>
-                      <span className="font-semibold">{formatNumber(totalUsers)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Pro Users:</span>
-                      <span className="font-semibold">{formatNumber(proUsers)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Free Users:</span>
-                      <span className="font-semibold">{formatNumber(totalUsers - proUsers)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Banned Users:</span>
-                      <span className="font-semibold">{formatNumber(bannedUsers)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="logs" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Activity Logs</h2>
+            </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Content Statistics</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Total Profiles:</span>
-                      <span className="font-semibold">{formatNumber(profiles?.length || 0)}</span>
+            <Card>
+              <CardContent className="p-0">
+                <div className="space-y-2">
+                  {logsLoading ? (
+                    <div className="p-6 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading activity logs...</p>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Published Profiles:</span>
-                      <span className="font-semibold">{formatNumber(publishedProfiles)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Views:</span>
-                      <span className="font-semibold">{formatNumber(totalViews)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Downloads:</span>
-                      <span className="font-semibold">{formatNumber(totalDownloads)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-      
+                  ) : (
+                    logs?.map((log: AdminLog) => (
+                      <div key={log.id} className="p-4 border-b last:border-b-0">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              {log.action} {log.resourceType}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Admin ID: {log.adminId} • {new Date(log.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge variant="outline">{log.resourceType}</Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
       <Footer />
     </div>
+  );
+}
+
+function CategoryForm({ onSubmit }: { onSubmit: (data: any) => void }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    icon: "",
+    sortOrder: 0,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Category Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="slug">Slug</Label>
+        <Input
+          id="slug"
+          value={formData.slug}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
+      <div>
+        <Label htmlFor="icon">Icon</Label>
+        <Input
+          id="icon"
+          value={formData.icon}
+          onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+          placeholder="Lucide icon name"
+        />
+      </div>
+      <Button type="submit" className="w-full">Create Category</Button>
+    </form>
+  );
+}
+
+function ArticleForm({ categories, onSubmit }: { categories: any[], onSubmit: (data: any) => void }) {
+  const [formData, setFormData] = useState({
+    categoryId: "",
+    title: "",
+    slug: "",
+    content: "",
+    excerpt: "",
+    author: "",
+    metaTitle: "",
+    metaDescription: "",
+    tags: "",
+    isPublished: false,
+    isFeatured: false,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+      ...formData,
+      categoryId: parseInt(formData.categoryId),
+      tags: formData.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+    };
+    onSubmit(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="slug">Slug</Label>
+          <Input
+            id="slug"
+            value={formData.slug}
+            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="categoryId">Category</Label>
+        <Select value={formData.categoryId} onValueChange={(value) => setFormData({ ...formData, categoryId: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id.toString()}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="excerpt">Excerpt</Label>
+        <Textarea
+          id="excerpt"
+          value={formData.excerpt}
+          onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+          rows={2}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="content">Content</Label>
+        <Textarea
+          id="content"
+          value={formData.content}
+          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+          rows={6}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="author">Author</Label>
+          <Input
+            id="author"
+            value={formData.author}
+            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="tags">Tags (comma-separated)</Label>
+          <Input
+            id="tags"
+            value={formData.tags}
+            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="isPublished"
+            checked={formData.isPublished}
+            onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+          />
+          <Label htmlFor="isPublished">Published</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="isFeatured"
+            checked={formData.isFeatured}
+            onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
+          />
+          <Label htmlFor="isFeatured">Featured</Label>
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full">Create Article</Button>
+    </form>
   );
 }

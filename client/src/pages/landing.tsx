@@ -48,22 +48,86 @@ export default function Landing() {
           
           {/* Hero Demo */}
           <div className="relative max-w-5xl mx-auto">
-            <Card className="overflow-hidden shadow-2xl">
-              <div className="bg-muted px-4 py-3 flex items-center space-x-2">
+            <div className="bg-gray-800 rounded-t-lg p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
                 <div className="flex space-x-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm text-muted-foreground">alexsmith.namedrop.cv</span>
+                <div className="bg-gray-700 px-4 py-1.5 rounded-md text-sm text-gray-300 ml-4 font-mono">
+                  https://alexsmith.namedrop.cv
                 </div>
               </div>
-              <div className="h-64 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-primary/20 rounded-full mx-auto mb-4"></div>
-                  <h3 className="text-2xl font-bold mb-2">Alex Smith</h3>
-                  <p className="text-primary font-medium">Senior Software Engineer</p>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-gray-600 rounded"></div>
+                <div className="w-4 h-4 bg-gray-600 rounded"></div>
+              </div>
+            </div>
+            
+            <Card className="overflow-hidden shadow-2xl rounded-t-none">
+              <div className="bg-white dark:bg-gray-900 p-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    AS
+                  </div>
+                  <div className="flex-1">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Alex Smith</h1>
+                    <p className="text-xl text-blue-600 dark:text-blue-400 mb-3">Senior Software Engineer</p>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      Passionate full-stack developer with 8+ years of experience building scalable web applications and leading engineering teams.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skills</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">React</span>
+                    <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-sm">Node.js</span>
+                    <span className="px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full text-sm">TypeScript</span>
+                    <span className="px-3 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full text-sm">AWS</span>
+                    <span className="px-3 py-1 bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200 rounded-full text-sm">PostgreSQL</span>
+                  </div>
+                </div>
+
+                {/* Work Experience Preview */}
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Experience</h2>
+                  <div className="space-y-4">
+                    <div className="border-l-2 border-blue-500 pl-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">Senior Software Engineer</h3>
+                      <p className="text-blue-600 dark:text-blue-400 text-sm">TechCorp • 2021 - Present</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+                        Led development of microservices architecture serving 1M+ users...
+                      </p>
+                    </div>
+                    <div className="border-l-2 border-gray-300 pl-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">Software Engineer</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">StartupXYZ • 2019 - 2021</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+                        Built responsive web applications using React and Express...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact/Social Links */}
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span className="text-sm">LinkedIn</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <div className="w-4 h-4 bg-gray-800 rounded"></div>
+                    <span className="text-sm">GitHub</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <div className="w-4 h-4 bg-green-500 rounded"></div>
+                    <span className="text-sm">alex@example.com</span>
+                  </div>
                 </div>
               </div>
             </Card>

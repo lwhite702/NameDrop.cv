@@ -50,37 +50,58 @@ export class WordPressService {
   private baseUrl = 'https://wrelikbrands.com/wp-json/wp/v2';
   private username = 'lwhite702';
   private password = 'vqX1 9KrT YFna rOqL pXXx EwMl';
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
   
   private async fetchWithAuth(url: string): Promise<any> {
-    try {
-      // First try without authentication to check if the API is publicly accessible
-      let response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+    // Check cache first
+    const cached = this.cache.get(url);
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.data;
+    }
 
-      // If that fails, try with authentication
-      if (!response.ok) {
+    try {
+      // Exponential backoff for rate limiting
+      let retries = 3;
+      let delay = 1000;
+      
+      while (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
         const auth = Buffer.from(`${this.username}:${this.password}`).toString('base64');
-        response = await fetch(url, {
+        const response = await fetch(url, {
           headers: {
             'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'User-Agent': 'NameDrop.cv/1.0'
           }
         });
-      }
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+        
+        if (response.status === 429) {
+          retries--;
+          delay *= 2; // Exponential backoff
+          if (retries === 0) {
+            throw new Error(`Rate limited after retries: ${response.status}`);
+          }
+          continue;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType?.includes('application/json')) {
-        throw new Error('Non-JSON response received');
-      }
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error('Non-JSON response received');
+        }
 
-      return await response.json();
+        const data = await response.json();
+        
+        // Cache successful responses
+        this.cache.set(url, { data, timestamp: Date.now() });
+        
+        return data;
+      }
     } catch (error) {
       console.error(`WordPress API error for ${url}:`, error);
       throw error;

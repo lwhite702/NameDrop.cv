@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { AnalyticsCards } from "@/components/dashboard/analytics-cards";
 import { PrepPairDiscount } from "@/components/integrations/preppair-discount";
+import { Tour } from "@/components/ui/tour";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +98,10 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <Tour triggerText="Take a Tour" triggerVariant="outline" />
+            </div>
             <p className="text-muted-foreground">
               Monitor your CV performance and manage your professional presence.
             </p>

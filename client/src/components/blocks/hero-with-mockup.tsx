@@ -16,6 +16,10 @@ interface HeroWithMockupProps {
     href: string
     icon?: React.ReactNode
   }
+  tertiaryCta?: {
+    text: string
+    component: React.ReactNode
+  }
   mockupImage?: {
     src: string
     alt: string

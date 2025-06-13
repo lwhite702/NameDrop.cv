@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Tour } from "@/components/ui/tour";
+import { FeaturedPosts } from "@/components/blog/featured-posts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -214,6 +215,13 @@ export default function Landing() {
               </div>
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* Featured Blog Posts */}
+      <section id="blog" className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <FeaturedPosts limit={3} showHeader={true} />
         </div>
       </section>
 

@@ -1,111 +1,212 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { BlogLayout } from '@/components/blog/blog-layout';
-import { BlogPost, BlogCategory, TableOfContentsItem, RelatedArticle } from '@shared/blog-schema';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Calendar, Search, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
+import { BlogPost, BlogCategory } from "@shared/blog-schema";
 
 export default function Blog() {
-  const [selectedPost, setSelectedPost] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-  // Fetch blog posts from Wrelik Brands
-  const { data: blogData, isLoading } = useQuery({
-    queryKey: ['/api/blog/posts', searchQuery, selectedCategory],
+  const { data: posts = [], isLoading: postsLoading } = useQuery<BlogPost[]>({
+    queryKey: ["/api/blog/posts", selectedCategory],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedCategory) params.append('category', selectedCategory);
+      if (selectedCategory) params.append("category", selectedCategory);
       
       const response = await fetch(`/api/blog/posts?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch blog posts');
-      return response.json();
-    }
-  });
-
-  // Fetch specific post
-  const { data: currentPost } = useQuery({
-    queryKey: ['/api/blog/posts', selectedPost],
-    queryFn: async () => {
-      if (!selectedPost) return null;
-      const response = await fetch(`/api/blog/posts/${selectedPost}`);
-      if (!response.ok) throw new Error('Failed to fetch blog post');
+      if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json();
     },
-    enabled: !!selectedPost
   });
 
-  // Fetch categories
-  const { data: categories = [] } = useQuery({
-    queryKey: ['/api/blog/categories'],
+  const { data: categories = [] } = useQuery<BlogCategory[]>({
+    queryKey: ["/api/blog/categories"],
     queryFn: async () => {
-      const response = await fetch('/api/blog/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const response = await fetch("/api/blog/categories");
+      if (!response.ok) throw new Error("Failed to fetch categories");
       return response.json();
-    }
+    },
   });
 
-  // Generate table of contents from post content
-  const generateTableOfContents = (content: string): TableOfContentsItem[] => {
-    if (!content) return [];
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    
-    return Array.from(headings).map((heading, index) => ({
-      id: heading.id || `heading-${index}`,
-      text: heading.textContent || '',
-      level: parseInt(heading.tagName.charAt(1))
-    }));
-  };
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  // Get related articles
-  const getRelatedArticles = (post: BlogPost): RelatedArticle[] => {
-    if (!post || !blogData?.posts) return [];
-    
-    return blogData.posts
-      .filter((p: BlogPost) => 
-        p.id !== post.id && 
-        (p.category === post.category || 
-         p.tags.some((tag: string) => post.tags.includes(tag)))
-      )
-      .slice(0, 3)
-      .map((p: BlogPost) => ({
-        id: p.id,
-        title: p.title,
-        slug: p.slug,
-        excerpt: p.excerpt,
-        publishedAt: p.publishedAt,
-        readingTime: p.readingTime,
-        category: p.category
-      }));
-  };
-
-  const handlePostSelect = (slug: string) => {
-    setSelectedPost(slug);
-  };
-
-  const handleCategorySelect = (categorySlug: string) => {
-    setSelectedCategory(categorySlug);
-    setSelectedPost(''); // Reset to list view
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setSelectedPost(''); // Reset to list view
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
-    <BlogLayout
-      posts={blogData?.posts || []}
-      currentPost={currentPost}
-      categories={categories}
-      relatedArticles={currentPost ? getRelatedArticles(currentPost) : []}
-      tableOfContents={currentPost ? generateTableOfContents(currentPost.content) : []}
-      onPostSelect={handlePostSelect}
-      onCategorySelect={handleCategorySelect}
-      onSearch={handleSearch}
-      loading={isLoading}
-    />
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Career Insights & Tips</h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Expert guidance from Wrelik Brands to accelerate your professional growth and career success
+            </p>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search articles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.slug}>
+                    {category.name} ({category.postCount})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Blog Posts Grid */}
+          {postsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <div className="h-48 bg-muted animate-pulse"></div>
+                  <CardHeader>
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-6 bg-muted rounded w-full"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-full"></div>
+                      <div className="h-4 bg-muted rounded w-2/3"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No articles found matching your criteria.</p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("");
+                }}
+                className="mt-4"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPosts.map((post) => (
+                <Card key={post.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
+                  {post.featuredImage && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={post.featuredImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <Badge variant="secondary" className="bg-white/90 text-black">
+                          {post.category}
+                        </Badge>
+                      </div>
+                      {post.featured && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-primary text-primary-foreground">
+                            Featured
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(post.publishedAt)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {post.readingTime} min read
+                      </div>
+                    </div>
+                    <CardTitle className="line-clamp-2 leading-tight">
+                      {post.title}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground line-clamp-3 mb-4">
+                      {post.excerpt}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        By {post.author}
+                      </span>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href={`/blog/${post.slug}`}>
+                          Read More
+                          <ArrowRight className="ml-1 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Load More Button (for pagination in future) */}
+          {filteredPosts.length > 0 && (
+            <div className="text-center mt-12">
+              <p className="text-muted-foreground">
+                Showing {filteredPosts.length} of {posts.length} articles
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <Footer />
+    </div>
   );
 }

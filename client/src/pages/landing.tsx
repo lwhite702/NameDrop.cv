@@ -40,7 +40,15 @@ export default function Landing() {
           text: "View Demo",
           href: "/preview/demo"
         }}
-
+        tertiaryCta={{
+          text: "Learn How",
+          component: (
+            <Tour 
+              triggerText="Learn How" 
+              triggerVariant="ghost" 
+            />
+          )
+        }}
         className="pt-20"
       >
         <CVPreview />

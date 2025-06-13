@@ -42,6 +42,7 @@ export function HeroWithMockup({
     href: "https://github.com/your-repo",
     icon: <Github className="mr-2 h-4 w-4" />,
   },
+  tertiaryCta,
   mockupImage,
   children,
   className,
@@ -115,6 +116,8 @@ export function HeroWithMockup({
                 {secondaryCta.text}
               </a>
             </Button>
+
+            {tertiaryCta && tertiaryCta.component}
           </div>
 
           {/* Mockup */}

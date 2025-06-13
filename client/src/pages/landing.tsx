@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HeroWithMockup } from "@/components/blocks/hero-with-mockup";
 import { CVPreview } from "@/components/cv-preview";
+import { Link } from "wouter";
 import { 
   Edit, 
   Upload, 
@@ -21,7 +22,8 @@ import {
   Search,
   ExternalLink,
   Share,
-  FileText
+  FileText,
+  ArrowRight
 } from "lucide-react";
 
 export default function Landing() {
@@ -486,6 +488,31 @@ export default function Landing() {
           </div>
           
           <p className="text-sm opacity-75">No credit card required • Free forever plan available</p>
+        </div>
+      </section>
+
+      {/* Featured Blog Posts Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Latest Career Insights
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Expert advice and tips to accelerate your professional growth and career development.
+            </p>
+          </div>
+          
+          <FeaturedPosts limit={3} showHeader={false} />
+          
+          <div className="text-center mt-12">
+            <Button asChild size="lg" variant="outline">
+              <Link href="/blog">
+                View All Articles
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 

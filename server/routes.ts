@@ -7,6 +7,7 @@ import { isAdmin, logAdminAction } from "./adminAuth";
 import { insertProfileSchema } from "@shared/schema";
 import { resumeFormatterAPI, prepPairAPI } from "./integrations";
 import { aiOptimizationService, cvSuggestionService } from "./openai";
+import { wordpressService } from "./wordpress";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";
@@ -710,20 +711,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Blog Routes
+  // Blog Routes - WordPress Integration
   app.get('/api/blog/posts', async (req, res) => {
     try {
-      const { search, category } = req.query;
+      const { limit = '10', category } = req.query;
+      const posts = await wordpressService.getPosts(
+        parseInt(limit as string), 
+        category as string
+      );
+      res.json(posts);
+    } catch (error: any) {
+      console.error('Blog posts error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog posts' });
+    }
+  });
+
+  app.get('/api/blog/featured', async (req, res) => {
+    try {
+      const { limit = '3' } = req.query;
+      const posts = await wordpressService.getFeaturedPosts(parseInt(limit as string));
+      res.json(posts);
+    } catch (error: any) {
+      console.error('Featured posts error:', error);
+      res.status(500).json({ error: 'Failed to fetch featured posts' });
+    }
+  });
+
+  app.get('/api/blog/categories', async (req, res) => {
+    try {
+      const categories = await wordpressService.getCategories();
+      res.json(categories);
+    } catch (error: any) {
+      console.error('Blog categories error:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  app.get('/api/blog/posts/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const post = await wordpressService.getPost(slug);
       
-      // Fetch from Wrelik Brands blog API
-      const wrelikUrl = new URL('https://wrelikbrands.com/api/blog/posts');
-      if (search) wrelikUrl.searchParams.append('search', search as string);
-      if (category) wrelikUrl.searchParams.append('category', category as string);
-      
-      const response = await fetch(wrelikUrl.toString());
-      if (!response.ok) {
-        // Fallback to sample data for development
-        const samplePosts = [
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      // Get related posts
+      const relatedPosts = await wordpressService.getRelatedPosts(
+        post.id,
+        post.category,
+        3
+      );
+
+      res.json({ ...post, relatedPosts });
+    } catch (error: any) {
+      console.error('Blog post error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+  });
+
+  // Legacy fallback with sample data
+  app.get('/api/blog/posts/legacy', async (req, res) => {
+    try {
+      const samplePosts = [
           {
             id: '1',
             title: 'How to Build a Professional CV That Gets Noticed',
@@ -840,13 +890,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         ];
         
-        return res.json({ posts: samplePosts });
-      }
-      
-      const data = await response.json();
-      res.json(data);
-    } catch (error) {
-      console.error('Blog posts error:', error);
+        res.json(samplePosts);
+    } catch (error: any) {
+      console.error('Legacy blog posts error:', error);
       res.status(500).json({ error: 'Failed to fetch blog posts' });
     }
   });

@@ -711,14 +711,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Blog Routes - WordPress Integration
+  // Blog Routes - WordPress Integration with Fallback
   app.get('/api/blog/posts', async (req, res) => {
     try {
       const { limit = '10', category } = req.query;
-      const posts = await wordpressService.getPosts(
+      let posts = await wordpressService.getPosts(
         parseInt(limit as string), 
         category as string
       );
+
+      // If WordPress API fails, use fallback data
+      if (posts.length === 0) {
+        const fallbackResponse = await fetch(`${req.protocol}://${req.get('host')}/api/blog/posts/legacy`);
+        if (fallbackResponse.ok) {
+          posts = await fallbackResponse.json();
+        }
+      }
+
       res.json(posts);
     } catch (error: any) {
       console.error('Blog posts error:', error);
@@ -729,7 +738,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/blog/featured', async (req, res) => {
     try {
       const { limit = '3' } = req.query;
-      const posts = await wordpressService.getFeaturedPosts(parseInt(limit as string));
+      let posts = await wordpressService.getFeaturedPosts(parseInt(limit as string));
+
+      // If WordPress API fails, use fallback data
+      if (posts.length === 0) {
+        const fallbackResponse = await fetch(`${req.protocol}://${req.get('host')}/api/blog/posts/legacy`);
+        if (fallbackResponse.ok) {
+          const allPosts = await fallbackResponse.json();
+          posts = allPosts.filter((post: any) => post.featured).slice(0, parseInt(limit as string));
+        }
+      }
+
       res.json(posts);
     } catch (error: any) {
       console.error('Featured posts error:', error);
@@ -739,7 +758,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/blog/categories', async (req, res) => {
     try {
-      const categories = await wordpressService.getCategories();
+      let categories = await wordpressService.getCategories();
+
+      // If WordPress API fails, use fallback data
+      if (categories.length === 0) {
+        categories = [
+          { id: '1', name: 'Career Tips', slug: 'career-tips', description: 'Professional development and career advice', postCount: 15 },
+          { id: '2', name: 'Networking', slug: 'networking', description: 'Building professional relationships', postCount: 8 },
+          { id: '3', name: 'Job Search', slug: 'job-search', description: 'Strategies for finding your next role', postCount: 12 },
+          { id: '4', name: 'Industry Insights', slug: 'industry-insights', description: 'Latest trends and market analysis', postCount: 6 },
+          { id: '5', name: 'Announcements', slug: 'announcements', description: 'Company news and updates', postCount: 3 }
+        ];
+      }
+
       res.json(categories);
     } catch (error: any) {
       console.error('Blog categories error:', error);
@@ -750,8 +781,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/blog/posts/:slug', async (req, res) => {
     try {
       const { slug } = req.params;
-      const post = await wordpressService.getPost(slug);
+      let post = await wordpressService.getPost(slug);
       
+      // If WordPress API fails, try fallback data
+      if (!post) {
+        const fallbackResponse = await fetch(`${req.protocol}://${req.get('host')}/api/blog/posts/legacy`);
+        if (fallbackResponse.ok) {
+          const allPosts = await fallbackResponse.json();
+          post = allPosts.find((p: any) => p.slug === slug);
+        }
+      }
+
       if (!post) {
         return res.status(404).json({ error: 'Post not found' });
       }

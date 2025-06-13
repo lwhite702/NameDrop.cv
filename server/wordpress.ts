@@ -66,11 +66,17 @@ export class WordPressService {
         throw new Error(`WordPress API error: ${response.status}`);
       }
 
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error('WordPress API returned non-JSON response');
+      }
+
       const posts: WordPressPost[] = await response.json();
       return posts.map(this.transformPost);
     } catch (error) {
       console.error('Error fetching WordPress posts:', error);
-      throw error;
+      // Return empty array to allow fallback to legacy endpoint
+      return [];
     }
   }
 

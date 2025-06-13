@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, ArrowRight, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { BlogPost } from "@shared/blog-schema";
-import { formatDistanceToNow } from "date-fns";
+// Remove date-fns import since it's not available
 
 interface FeaturedPostsProps {
   limit?: number;
@@ -85,7 +85,7 @@ export function FeaturedPosts({ limit = 3, showHeader = true }: FeaturedPostsPro
               <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  {formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })}
+                  {new Date(post.publishedAt).toLocaleDateString()}
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import { CrossPromotionCTA } from "@/components/blog/cross-promotion-cta";
 import { NewsletterSignup } from "@/components/blog/newsletter-signup";
-import { Clock, Calendar, ArrowLeft, ArrowRight, Share2, Twitter, Linkedin, Facebook, Link2 } from "lucide-react";
+import { Clock, Calendar, ArrowLeft, ArrowRight, Share2, Twitter, Linkedin, Facebook, Link2, BookOpen, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { BlogPost, RelatedArticle } from "@shared/blog-schema";
 
@@ -265,7 +265,7 @@ export default function BlogPostPage() {
                   <CardTitle className="text-lg">Share This Article</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -274,8 +274,10 @@ export default function BlogPostPage() {
                         const url = encodeURIComponent(window.location.href);
                         window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
                       }}
+                      className="flex items-center gap-2"
                     >
                       <Twitter className="h-4 w-4" />
+                      <span className="hidden sm:inline">Twitter</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -284,8 +286,10 @@ export default function BlogPostPage() {
                         const url = encodeURIComponent(window.location.href);
                         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
                       }}
+                      className="flex items-center gap-2"
                     >
                       <Linkedin className="h-4 w-4" />
+                      <span className="hidden sm:inline">LinkedIn</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -297,8 +301,10 @@ export default function BlogPostPage() {
                           console.log('Error copying link:', error);
                         }
                       }}
+                      className="flex items-center gap-2 col-span-2"
                     >
                       <Link2 className="h-4 w-4" />
+                      <span>Copy Link</span>
                     </Button>
                   </div>
                 </CardContent>

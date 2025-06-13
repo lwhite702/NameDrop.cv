@@ -7,13 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Calendar, Search, ArrowRight, BookOpen, TrendingUp } from "lucide-react";
+import { Clock, Calendar, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { BlogPost, BlogCategory } from "@shared/blog-schema";
 
 export default function Blog() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { data: posts = [], isLoading: postsLoading } = useQuery<BlogPost[]>({
     queryKey: ["/api/blog/posts", selectedCategory],
@@ -36,11 +36,18 @@ export default function Blog() {
     },
   });
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Initialize filtered posts when posts data changes
+  useMemo(() => {
+    setFilteredPosts(posts);
+  }, [posts]);
+
+  const handleFilter = (filtered: BlogPost[]) => {
+    setFilteredPosts(filtered);
+  };
+
+  const handleCategoryChange = (category: string | null) => {
+    setSelectedCategory(category);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -98,8 +105,8 @@ export default function Blog() {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("");
+                  setFilteredPosts(posts);
+                  setSelectedCategory(null);
                 }}
                 className="mt-4"
               >

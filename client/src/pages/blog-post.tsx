@@ -2,13 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { ReadingProgress } from "@/components/blog/reading-progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { TableOfContents } from "@/components/blog/table-of-contents";
 import { CrossPromotionCTA } from "@/components/blog/cross-promotion-cta";
-import { Clock, Calendar, ArrowLeft, ArrowRight, Share2 } from "lucide-react";
+import { NewsletterSignup } from "@/components/blog/newsletter-signup";
+import { Clock, Calendar, ArrowLeft, ArrowRight, Share2, Twitter, Linkedin, Facebook, Link2 } from "lucide-react";
 import { Link } from "wouter";
 import { BlogPost, RelatedArticle } from "@shared/blog-schema";
 
@@ -104,6 +106,7 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ReadingProgress />
       <Header />
       
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
@@ -254,20 +257,73 @@ export default function BlogPostPage() {
             <div className="lg:col-span-1 space-y-6">
               <TableOfContents content={postData.content} />
               
-              {/* Newsletter Signup */}
+              <NewsletterSignup />
+              
+              {/* Social Sharing */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Stay Updated</CardTitle>
+                  <CardTitle className="text-lg">Share This Article</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Get the latest career insights and professional development tips delivered to your inbox.
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link href="/blog">
-                      View All Articles
-                    </Link>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const text = encodeURIComponent(`${postData.title} - ${postData.excerpt}`);
+                        const url = encodeURIComponent(window.location.href);
+                        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+                      }}
+                    >
+                      <Twitter className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const url = encodeURIComponent(window.location.href);
+                        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+                      }}
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(window.location.href);
+                        } catch (error) {
+                          console.log('Error copying link:', error);
+                        }
+                      }}
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Quick Navigation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Explore More</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Button asChild variant="ghost" className="w-full justify-start">
+                      <Link href="/blog">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        All Articles
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost" className="w-full justify-start">
+                      <Link href={`/blog?category=${postData.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                        <TrendingUp className="h-4 w-4 mr-2" />
+                        {postData.category} Articles
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>

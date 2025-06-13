@@ -64,31 +64,14 @@ export default function Blog() {
             </p>
           </div>
 
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search articles..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-64">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.slug}>
-                    {category.name} ({category.postCount})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Enhanced Search Component */}
+          <BlogSearch
+            posts={posts}
+            categories={categories}
+            onFilter={handleFilter}
+            onCategoryChange={handleCategoryChange}
+            selectedCategory={selectedCategory}
+          />
 
           {/* Blog Posts Grid */}
           {postsLoading ? (

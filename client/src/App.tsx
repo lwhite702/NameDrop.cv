@@ -26,6 +26,7 @@ import CVWizard from "@/pages/cv-wizard";
 import KnowledgeBase from "@/pages/knowledge-base";
 import KnowledgeBaseArticle from "@/pages/knowledge-base-article";
 import SupportAPITest from "@/pages/support-api-test";
+import SloganDemo from "@/pages/slogan-demo";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,6 +42,7 @@ function Router() {
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/help" component={Help} />
           <Route path="/support-api-test" component={SupportAPITest} />
+          <Route path="/slogan-demo" component={SloganDemo} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/cookie-policy" component={CookiePolicy} />
@@ -63,6 +65,7 @@ function Router() {
           <Route path="/knowledge-base" component={KnowledgeBase} />
           <Route path="/knowledge-base/:slug" component={KnowledgeBaseArticle} />
           <Route path="/support-api-test" component={SupportAPITest} />
+          <Route path="/slogan-demo" component={SloganDemo} />
           <Route path="/terms" component={Terms} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/cookie-policy" component={CookiePolicy} />

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HeroWithMockup } from "@/components/blocks/hero-with-mockup";
 import { CVPreview } from "@/components/cv-preview";
+import { NameDropSlogan } from "@/components/branding/NameDropSlogan";
 import { Link } from "wouter";
 import { 
   Edit, 
@@ -56,6 +57,20 @@ export default function Landing() {
       >
         <CVPreview />
       </HeroWithMockup>
+
+      {/* Rotating Slogan Banner */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-primary/5 border-y">
+        <div className="max-w-4xl mx-auto text-center">
+          <NameDropSlogan 
+            variant="rotating" 
+            className="text-2xl md:text-3xl font-bold text-primary"
+            animationDuration={3500}
+          />
+          <p className="mt-4 text-sm text-muted-foreground">
+            Experience the power of professional branding with rotating messaging
+          </p>
+        </div>
+      </section>
 
       {/* Features Grid */}
       <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">

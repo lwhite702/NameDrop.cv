@@ -100,7 +100,7 @@ interface Analytics {
 export default function SupportAPITest() {
   const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
   const [ticketCategory, setTicketCategory] = useState("general");
@@ -118,7 +118,7 @@ export default function SupportAPITest() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append("q", searchQuery);
-      if (selectedCategory) params.append("category", selectedCategory);
+      if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
       params.append("limit", "20");
       
       const response = await fetch(`/api/support/articles/search?${params.toString()}`);
@@ -297,7 +297,7 @@ export default function SupportAPITest() {
                           <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
                           <SelectItem value="1">Getting Started</SelectItem>
                           <SelectItem value="2">Account Management</SelectItem>
                           <SelectItem value="3">Technical Issues</SelectItem>

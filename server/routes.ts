@@ -50,6 +50,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Slogans API endpoint
+  app.get('/api/slogans', (req, res) => {
+    const slogans = {
+      primary: "Drop your name. Own your narrative.",
+      alternate: [
+        "Your personal CV. Verified, stylish, yours.",
+        "Smarter than a linktree. Built for your brand.",
+        "Link your work. Prove your worth.",
+        "Verified resumes. Custom domains. Instant credibility.",
+        "Your digital identity — simplified and stunning.",
+        "Not just a profile. A platform."
+      ]
+    };
+    res.json(slogans);
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

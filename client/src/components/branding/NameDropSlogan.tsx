@@ -23,7 +23,10 @@ export function NameDropSlogan({
   useEffect(() => {
     const loadSlogans = async () => {
       try {
-        const response = await fetch("/slogans/namedrop_slogans.json");
+        const response = await fetch("/api/slogans");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data: SloganData = await response.json();
         setSlogans(data);
         
@@ -79,23 +82,11 @@ export function NameDropSlogan({
   );
 }
 
-// Social and SEO metadata exports
-export const SOCIAL_ALT = "NameDrop.cv is the simplest way to share your story, work, and credentials — all in one link.";
-
-export const META_DESCRIPTIONS = [
-  "Create your own verified personal CV page with custom links and domains.",
-  "Stand out online with a modern, professional bio link — built for your career."
-];
-
-// Utility function to get a random meta description
-export const getRandomMetaDescription = () => {
-  return META_DESCRIPTIONS[Math.floor(Math.random() * META_DESCRIPTIONS.length)];
-};
-
 // Utility function to get all slogans for SEO content
 export const getSloganText = async (): Promise<string> => {
   try {
-    const response = await fetch("/slogans/namedrop_slogans.json");
+    const response = await fetch("/api/slogans");
+    if (!response.ok) throw new Error('Failed to fetch');
     const data: SloganData = await response.json();
     return data.primary;
   } catch (error) {

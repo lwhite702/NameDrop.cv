@@ -25,6 +25,7 @@ import BlogPost from "@/pages/blog-post";
 import CVWizard from "@/pages/cv-wizard";
 import KnowledgeBase from "@/pages/knowledge-base";
 import KnowledgeBaseArticle from "@/pages/knowledge-base-article";
+import KnowledgeBaseGuide from "@/pages/knowledge-base-guide";
 import SupportAPITest from "@/pages/support-api-test";
 import SloganDemo from "@/pages/slogan-demo";
 
@@ -41,6 +42,7 @@ function Router() {
           <Route path="/blog" component={Blog} />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/help" component={Help} />
+          <Route path="/knowledge-base-guide" component={KnowledgeBaseGuide} />
           <Route path="/support-api-test" component={SupportAPITest} />
           <Route path="/slogan-demo" component={SloganDemo} />
           <Route path="/terms" component={Terms} />
@@ -64,6 +66,7 @@ function Router() {
           <Route path="/help" component={Help} />
           <Route path="/knowledge-base" component={KnowledgeBase} />
           <Route path="/knowledge-base/:slug" component={KnowledgeBaseArticle} />
+          <Route path="/knowledge-base-guide" component={KnowledgeBaseGuide} />
           <Route path="/support-api-test" component={SupportAPITest} />
           <Route path="/slogan-demo" component={SloganDemo} />
           <Route path="/terms" component={Terms} />
